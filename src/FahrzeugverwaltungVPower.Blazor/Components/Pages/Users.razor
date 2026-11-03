@@ -1,0 +1,48 @@
+﻿@page "/users"
+@using FahrzeugverwaltungVPower.Core.Entities
+@attribute [StreamRendering]
+
+<PageTitle>Users</PageTitle>
+
+<h1>Users</h1>
+
+<p>Nutzerverwaltung.</p>
+
+<EditForm OnSubmit="CreateUser" autocorrect="off" Model="Model!" FormName="user-form">
+    <label for="firstName">Vorname</label>
+    <InputText type="text" id="firstName" placeholder="Vorname" @bind-Value="Model.FirstName" class="form-control mb-3" />
+
+    <label for="lastName">Nachname</label>
+    <InputText type="text" id="lastName" placeholder="Nachname" @bind-Value="Model.LastName" class="form-control mb-3" />
+
+    <label for="email">Email</label>
+    <InputText type="email" id="email" placeholder="Email" @bind-Value="Model.Email" class="form-control mb-3" />
+
+    <label for="role">Rolle</label>
+    <InputText type="text" id="role" placeholder="Rolle" @bind-Value="Role" class="form-control mb-3" />
+
+    <button type="submit" class="btn btn-primary">Erstellen</button>
+</EditForm>
+
+@code {
+    private string? Role { get; set; }
+
+    [SupplyParameterFromForm]
+    private ApplicationUser? Model { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        Model ??= new()
+        {
+            FirstName = string.Empty,
+            LastName = string.Empty,
+            Email = string.Empty,
+        };
+    }
+
+    private void CreateUser()
+    {
+        var user = Model;
+        // Send user data
+    }
+}

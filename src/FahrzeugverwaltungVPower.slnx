@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="FahrzeugverwaltungVPower.API/FahrzeugverwaltungVPower.API.csproj" />
+  <Project Path="FahrzeugverwaltungVPower.Blazor/FahrzeugverwaltungVPower.Blazor.csproj" />
+  <Project Path="FahrzeugverwaltungVPower.Core/FahrzeugverwaltungVPower.Core.csproj" />
+  <Project Path="FahrzeugverwaltungVPower.Infrastructure/FahrzeugverwaltungVPower.Infrastructure.csproj" />
+</Solution>
