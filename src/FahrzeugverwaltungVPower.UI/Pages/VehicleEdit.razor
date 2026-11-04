@@ -1,0 +1,246 @@
+@page "/vehicles/new"
+@page "/vehicles/{Id:guid}"
+@attribute [Authorize(Roles = UiRoles.CanView)]
+@inject VehicleService VehicleApi
+@inject NavigationManager Navigation
+@inject IDialogService Dialogs
+@inject ISnackbar Snackbar
+@inject TimeProvider Clock
+
+<PageTitle>@Title</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">@Title</MudText>
+
+@if (_loading)
+{
+    <MudText>Wird geladen ...</MudText>
+}
+else if (_forbidden)
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-3">Für das Anlegen von Fahrzeugen fehlt die Berechtigung.</MudAlert>
+    <MudLink Href="vehicles">Zurück zur Liste</MudLink>
+}
+else if (_notFound)
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-3">Das Fahrzeug wurde nicht gefunden. Es wurde möglicherweise gelöscht.</MudAlert>
+    <MudLink Href="vehicles">Zurück zur Liste</MudLink>
+}
+else
+{
+    @if (_readOnly)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-3">Du darfst dieses Fahrzeug nur ansehen, nicht ändern.</MudAlert>
+    }
+
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudForm @ref="_formRef" Spacing="2">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <RuleTextField @ref="_licensePlate" Label="Kennzeichen (Feld A)" Required="true" Disabled="_readOnly"
+                                   @bind-Value="_form.LicensePlate" Validator="VehicleRules.LicensePlate" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <RuleTextField @ref="_vin" Label="VIN (Feld E, 17 Zeichen)" Required="true" Disabled="_readOnly"
+                                   @bind-Value="_form.Vin" Validator="VehicleRules.Vin" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudDatePicker @ref="_firstRegistration" Label="Erstzulassung (Feld B)" Required="true" Disabled="_readOnly"
+                                   Variant="Variant.Outlined" Editable="true" Culture="_culture" DateFormat="dd.MM.yyyy"
+                                   @bind-Date="_form.FirstRegistrationDate" @bind-Date:after="() => _firstRegistration.ValidateAsync()"
+                                   Validation="@FirstRegistrationValidator" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudDatePicker @ref="_inspection" Label="HU gültig bis" Required="true" Disabled="_readOnly"
+                                   Variant="Variant.Outlined" Editable="true" Culture="_culture" DateFormat="dd.MM.yyyy"
+                                   @bind-Date="_form.InspectionValidUntil" @bind-Date:after="() => _inspection.ValidateAsync()"
+                                   Validation="@InspectionValidator" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <RuleTextField @ref="_holder" Label="Halter: Name oder Firma (Feld C.1.1)" Required="true" Disabled="_readOnly"
+                                   @bind-Value="_form.Holder" Validator="@(v => VehicleRules.Required(v, "Der Halter", 200))" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <RuleTextField @ref="_holderFirstName" Label="Halter: Vorname (Feld C.1.2)" Disabled="_readOnly"
+                                   HelperText="Bei Firmen leer lassen." @bind-Value="_form.HolderFirstName"
+                                   Validator="@(v => VehicleRules.Optional(v, "Der Vorname", 200))" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <RuleTextField @ref="_manufacturer" Label="Hersteller (Feld D.1)" Required="true" Disabled="_readOnly"
+                                   @bind-Value="_form.Manufacturer" Validator="@(v => VehicleRules.Required(v, "Der Hersteller", 25))" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <RuleTextField @ref="_type" Label="Typ (Feld D.2)" Required="true" Disabled="_readOnly"
+                                   @bind-Value="_form.TypeDesignation" Validator="@(v => VehicleRules.Required(v, "Der Typ", 25))" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <RuleTextField @ref="_model" Label="Modell (Feld D.3)" Required="true" Disabled="_readOnly"
+                                   @bind-Value="_form.Model" Validator="@(v => VehicleRules.Required(v, "Das Modell", 25))" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <RuleTextField @ref="_hsn" Label="HSN (Feld 2.1, 4 Ziffern)" Required="true" Disabled="_readOnly"
+                                   @bind-Value="_form.Hsn" Validator="VehicleRules.Hsn" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <RuleTextField @ref="_tsn" Label="TSN (Feld 2.2, bis 9 Zeichen)" Required="true" Disabled="_readOnly"
+                                   @bind-Value="_form.Tsn" Validator="VehicleRules.Tsn" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+
+        <ErrorList Errors="_errors" />
+
+        <MudStack Row="true" Spacing="2" Class="mt-4" Wrap="Wrap.Wrap">
+            @if (!_readOnly)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_busy" OnClick="SaveAsync">
+                    @(_busy ? "Wird gespeichert ..." : "Speichern")
+                </MudButton>
+            }
+            <MudButton Variant="Variant.Outlined" Href="vehicles">@(_readOnly ? "Zurück" : "Abbrechen")</MudButton>
+
+            @if (!IsNew && _canDelete)
+            {
+                <MudSpacer />
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                           Disabled="_busy" OnClick="DeleteAsync">Löschen</MudButton>
+            }
+        </MudStack>
+    </MudPaper>
+}
+
+@code {
+    private static readonly System.Globalization.CultureInfo _culture = new("de-DE");
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    /// <summary>Id des Fahrzeugs, beim Anlegen leer.</summary>
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private MudForm _formRef = null!;
+    private RuleTextField _licensePlate = null!;
+    private RuleTextField _vin = null!;
+    private RuleTextField _holder = null!;
+    private RuleTextField _holderFirstName = null!;
+    private RuleTextField _manufacturer = null!;
+    private RuleTextField _type = null!;
+    private RuleTextField _model = null!;
+    private RuleTextField _hsn = null!;
+    private RuleTextField _tsn = null!;
+    private MudDatePicker _firstRegistration = null!;
+    private MudDatePicker _inspection = null!;
+
+    private VehicleForm _form = new();
+    private IReadOnlyList<ApiError> _errors = [];
+    private string _licensePlateText = string.Empty;
+    private bool _loading = true;
+    private bool _busy;
+    private bool _notFound;
+    private bool _forbidden;
+    private bool _readOnly;
+    private bool _canDelete;
+
+    private bool IsNew => Id is null;
+
+    private string Title => IsNew ? "Neues Fahrzeug" : _readOnly ? "Fahrzeug ansehen" : "Fahrzeug bearbeiten";
+
+    private DateOnly Today => DateOnly.FromDateTime(Clock.GetLocalNow().DateTime);
+
+    private Func<DateTime?, string?> FirstRegistrationValidator => v => VehicleRules.FirstRegistrationDate(v, Today);
+    private Func<DateTime?, string?> InspectionValidator => VehicleRules.InspectionValidUntil;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        _notFound = false;
+        _errors = [];
+
+        ClaimsPrincipal user = (await AuthenticationState!).User;
+
+        _canDelete = UiRoles.IsInAny(user, UiRoles.CanDelete);
+        _forbidden = IsNew && !UiRoles.IsInAny(user, UiRoles.CanCreate);
+        _readOnly = !IsNew && !UiRoles.IsInAny(user, UiRoles.CanEdit);
+
+        if (Id is Guid id)
+        {
+            ApiResult<VehicleModel> result = await VehicleApi.GetAsync(id);
+
+            if (result.Success && result.Value is not null)
+            {
+                _form = VehicleForm.From(result.Value);
+                _licensePlateText = result.Value.LicensePlate;
+            }
+            else if (result.StatusCode == 404)
+            {
+                _notFound = true;
+            }
+            else
+            {
+                _errors = result.Errors;
+            }
+        }
+        else
+        {
+            _form = new VehicleForm();
+        }
+
+        _loading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        _errors = [];
+
+        await _formRef.ValidateAsync();
+
+        if (!_formRef.IsValid)
+        {
+            return;
+        }
+
+        _busy = true;
+
+        ApiResult result = Id is Guid id
+            ? await VehicleApi.UpdateAsync(id, _form)
+            : await VehicleApi.CreateAsync(_form);
+
+        _busy = false;
+
+        if (result.Success)
+        {
+            Snackbar.Add(IsNew ? "Das Fahrzeug wurde angelegt." : "Die Änderungen wurden gespeichert.", Severity.Success);
+            Navigation.NavigateTo("vehicles");
+        }
+        else
+        {
+            _errors = result.Errors;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (Id is not Guid id || !await Dialogs.ConfirmDeleteAsync($"Das Fahrzeug {_licensePlateText}"))
+        {
+            return;
+        }
+
+        _busy = true;
+        ApiResult result = await VehicleApi.DeleteAsync(id);
+        _busy = false;
+
+        if (result.Success)
+        {
+            Snackbar.Add($"Das Fahrzeug {_licensePlateText} wurde gelöscht.", Severity.Success);
+            Navigation.NavigateTo("vehicles");
+        }
+        else
+        {
+            _errors = result.Errors;
+        }
+    }
+}

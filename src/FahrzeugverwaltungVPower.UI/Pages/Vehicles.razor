@@ -1,0 +1,175 @@
+@page "/vehicles"
+@attribute [Authorize(Roles = UiRoles.CanView)]
+@inject VehicleService VehicleApi
+@inject NavigationManager Navigation
+@inject IDialogService Dialogs
+@inject ISnackbar Snackbar
+@inject TimeProvider Clock
+
+<PageTitle>Fahrzeuge</PageTitle>
+
+<MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2" Class="mb-3">
+    <MudText Typo="Typo.h4">Fahrzeuge</MudText>
+
+    @if (_canCreate)
+    {
+        <MudStack Row="true" Spacing="2">
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.DirectionsCar" Disabled="_busy"
+                       OnClick="CreateTestVehicleAsync">Testfahrzeug zufügen</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       Href="vehicles/new">Neues Fahrzeug</MudButton>
+        </MudStack>
+    }
+</MudStack>
+
+<ErrorList Errors="_errors" />
+
+<MudDataGrid T="VehicleModel" Items="_vehicles" Loading="_loading" Dense="true" Hover="true"
+             SortMode="SortMode.Single" QuickFilter="MatchesSearch" RowClick="OnRowClick"
+             RowStyle="cursor: pointer" Elevation="1">
+    <ToolBarContent>
+        <MudTextField @bind-Value="_search" Placeholder="Suchen in Kennzeichen, Halter, Fahrzeug und VIN" Immediate="true"
+                      DebounceInterval="300" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                      Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense" />
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="v => v.LicensePlate" Title="Kennzeichen" />
+        <PropertyColumn Property="v => v.HolderDisplayName" Title="Halter" />
+        <PropertyColumn Property="v => v.VehicleText" Title="Fahrzeug" />
+        <PropertyColumn Property="v => v.InspectionValidUntil" Title="HU gültig bis">
+            <CellTemplate>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@InspectionColor(context.Item)">
+                    @context.Item.InspectionValidUntil.ToString("dd.MM.yyyy")
+                </MudChip>
+            </CellTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="v => v.VIN" Title="VIN">
+            <CellTemplate>
+                <MudText Typo="Typo.caption" Style="font-family: monospace">@context.Item.VIN</MudText>
+            </CellTemplate>
+        </PropertyColumn>
+        <TemplateColumn Sortable="false" Filterable="false" Hidden="!_canDelete" CellClass="text-right" HeaderClass="text-right" Title="">
+            <CellTemplate>
+                <MudTooltip Text="Löschen">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                   Disabled="_busy" OnClick="() => DeleteAsync(context.Item)" />
+                </MudTooltip>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <NoRecordsContent>
+        <MudText Class="pa-4">Keine Fahrzeuge gefunden.</MudText>
+    </NoRecordsContent>
+    <PagerContent>
+        <MudDataGridPager T="VehicleModel" />
+    </PagerContent>
+</MudDataGrid>
+
+<MudStack Row="true" Spacing="3" Class="mt-3" AlignItems="AlignItems.Center">
+    <MudText Typo="Typo.caption">HU:</MudText>
+    <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Filled">abgelaufen</MudChip>
+    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled">fällig in den nächsten 3 Monaten</MudChip>
+</MudStack>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private List<VehicleModel> _vehicles = [];
+    private IReadOnlyList<ApiError> _errors = [];
+    private string? _search;
+    private bool _loading = true;
+    private bool _busy;
+    private bool _canCreate;
+    private bool _canDelete;
+
+    private DateOnly Today => DateOnly.FromDateTime(Clock.GetLocalNow().DateTime);
+
+    protected override async Task OnInitializedAsync()
+    {
+        ClaimsPrincipal user = (await AuthenticationState!).User;
+        _canCreate = UiRoles.IsInAny(user, UiRoles.CanCreate);
+        _canDelete = UiRoles.IsInAny(user, UiRoles.CanDelete);
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+
+        ApiResult<List<VehicleModel>> result = await VehicleApi.GetAllAsync();
+
+        if (result.Success)
+        {
+            _vehicles = result.Value ?? [];
+            _errors = [];
+        }
+        else
+        {
+            _errors = result.Errors;
+        }
+
+        _loading = false;
+    }
+
+    private bool MatchesSearch(VehicleModel vehicle) =>
+        string.IsNullOrWhiteSpace(_search)
+        || vehicle.LicensePlate.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || vehicle.HolderDisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || vehicle.VehicleText.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || vehicle.VIN.Contains(_search, StringComparison.OrdinalIgnoreCase);
+
+    private void OnRowClick(DataGridRowClickEventArgs<VehicleModel> args) =>
+        Navigation.NavigateTo($"vehicles/{args.Item.Id}");
+
+    private Color InspectionColor(VehicleModel vehicle) => vehicle.InspectionStatus(Today) switch
+    {
+        InspectionStatus.Expired => Color.Error,
+        InspectionStatus.DueSoon => Color.Warning,
+        _ => Color.Default
+    };
+
+    private async Task DeleteAsync(VehicleModel vehicle)
+    {
+        if (!await Dialogs.ConfirmDeleteAsync($"Das Fahrzeug {vehicle.LicensePlate}"))
+        {
+            return;
+        }
+
+        _busy = true;
+        ApiResult result = await VehicleApi.DeleteAsync(vehicle.Id);
+        _busy = false;
+
+        if (result.Success)
+        {
+            _vehicles.Remove(vehicle);
+            _errors = [];
+            Snackbar.Add($"Das Fahrzeug {vehicle.LicensePlate} wurde gelöscht.", Severity.Success);
+        }
+        else
+        {
+            _errors = result.Errors;
+        }
+    }
+
+    // Nur für Vorführungen: legt ein Fahrzeug mit zufälligen Daten an (siehe README).
+    private async Task CreateTestVehicleAsync()
+    {
+        _busy = true;
+
+        VehicleForm form = TestVehicleGenerator.Create(_vehicles.Select(v => v.VIN), Today);
+        ApiResult result = await VehicleApi.CreateAsync(form);
+
+        _busy = false;
+
+        if (!result.Success)
+        {
+            _errors = result.Errors;
+            return;
+        }
+
+        await LoadAsync();
+        Snackbar.Add($"Testfahrzeug {form.LicensePlate} angelegt.", Severity.Success);
+    }
+}

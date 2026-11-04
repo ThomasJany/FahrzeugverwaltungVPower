@@ -7,4 +7,28 @@
     <MudText Typo="Typo.h4" GutterBottom="true">Willkommen, @context.User.Identity?.Name</MudText>
 </AuthorizeView>
 
-<MudText>Fahrzeugstammdaten aus der Zulassungsbescheinigung Teil I erfassen und verwalten.</MudText>
+<MudText Class="mb-6">Fahrzeugstammdaten aus der Zulassungsbescheinigung Teil I erfassen und verwalten.</MudText>
+
+<MudGrid>
+    <AuthorizeView Roles="@UiRoles.CanView" Context="vehiclesAccess">
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="2" Class="pa-6 d-flex flex-column align-center text-center" Style="height: 100%">
+                <MudIcon Icon="@Icons.Material.Filled.DirectionsCar" Color="Color.Primary" Style="font-size: 6rem" />
+                <MudText Typo="Typo.h5" Class="mt-2">Fahrzeuge</MudText>
+                <MudText Class="mb-4">Fahrzeuge suchen, ansehen und je nach Berechtigung anlegen, bearbeiten oder löschen.</MudText>
+                <MudButton Href="vehicles" Variant="Variant.Filled" Color="Color.Primary" Class="mt-auto">Zu den Fahrzeugen</MudButton>
+            </MudPaper>
+        </MudItem>
+    </AuthorizeView>
+
+    <AuthorizeView Roles="@UiRoles.CanManageUsers" Context="usersAccess">
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="2" Class="pa-6 d-flex flex-column align-center text-center" Style="height: 100%">
+                <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" Style="font-size: 6rem" />
+                <MudText Typo="Typo.h5" Class="mt-2">Benutzer</MudText>
+                <MudText Class="mb-4">Benutzer anlegen, bearbeiten und löschen und ihnen Rollen zuweisen.</MudText>
+                <MudButton Href="users" Variant="Variant.Filled" Color="Color.Primary" Class="mt-auto">Zur Benutzerverwaltung</MudButton>
+            </MudPaper>
+        </MudItem>
+    </AuthorizeView>
+</MudGrid>

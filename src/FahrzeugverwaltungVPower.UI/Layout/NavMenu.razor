@@ -1,7 +1,11 @@
 ﻿<MudNavMenu Class="pt-3 px-2">
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Start</MudNavLink>
 
-    <AuthorizeView Roles="@UiRoles.CanManageUsers">
+    <AuthorizeView Roles="@UiRoles.CanView" Context="vehiclesAccess">
+        <MudNavLink Href="vehicles" Icon="@Icons.Material.Filled.DirectionsCar">Fahrzeuge</MudNavLink>
+    </AuthorizeView>
+
+    <AuthorizeView Roles="@UiRoles.CanManageUsers" Context="usersAccess">
         <MudNavLink Href="users" Icon="@Icons.Material.Filled.People">Benutzer</MudNavLink>
     </AuthorizeView>
 </MudNavMenu>

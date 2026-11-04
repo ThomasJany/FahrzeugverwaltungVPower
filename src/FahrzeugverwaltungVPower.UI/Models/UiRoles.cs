@@ -24,8 +24,28 @@ public static class UiRoles
     /// <summary>Alle Rollen, in der Reihenfolge der Anzeige.</summary>
     public static readonly IReadOnlyList<string> All = [Admin, Creator, Editor, Viewer];
 
+    /// <summary>Rollen, die Fahrzeuge ansehen dürfen.</summary>
+    public const string CanView = Admin + "," + Creator + "," + Editor + "," + Viewer;
+
+    /// <summary>Rollen, die Fahrzeuge bearbeiten dürfen.</summary>
+    public const string CanEdit = Admin + "," + Creator + "," + Editor;
+
+    /// <summary>Rollen, die Fahrzeuge anlegen dürfen.</summary>
+    public const string CanCreate = Admin + "," + Creator;
+
+    /// <summary>Rollen, die Fahrzeuge löschen dürfen.</summary>
+    public const string CanDelete = Admin + "," + Creator;
+
     /// <summary>Rollen, die Benutzer verwalten dürfen.</summary>
     public const string CanManageUsers = Admin;
+
+    /// <summary>
+    /// Gibt an, ob der Benutzer mindestens eine der kommagetrennten Rollen hat.
+    /// </summary>
+    /// <param name="user">Der angemeldete Benutzer.</param>
+    /// <param name="roles">Kommagetrennte Rollenliste, zum Beispiel <see cref="CanEdit"/>.</param>
+    public static bool IsInAny(System.Security.Claims.ClaimsPrincipal user, string roles) =>
+        roles.Split(',').Any(user.IsInRole);
 
     /// <summary>
     /// Kurze Erklärung zu einer Rolle für die Anzeige.

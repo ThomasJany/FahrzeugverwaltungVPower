@@ -54,6 +54,7 @@ public static class UiServiceCollectionExtensions
         services.AddScoped<ApiClient>();
         services.AddScoped<AuthService>();
         services.AddScoped<UserService>();
+        services.AddScoped<VehicleService>();
 
         return services;
     }

@@ -7,8 +7,6 @@
 
 <PageTitle>Benutzer</PageTitle>
 
-<MudBreakpointProvider OnBreakpointChanged="OnBreakpointChanged" />
-
 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2" Class="mb-3">
     <MudText Typo="Typo.h4">Benutzer</MudText>
 
@@ -22,7 +20,7 @@
 
 <ErrorList Errors="_errors" />
 
-<MudDataGrid T="UserModel" Items="_users" Loading="_loading" Dense="_dense" Hover="true"
+<MudDataGrid T="UserModel" Items="_users" Loading="_loading" Dense="true" Hover="true"
              SortMode="SortMode.Single" QuickFilter="MatchesSearch" RowClick="OnRowClick"
              RowStyle="cursor: pointer" Elevation="1">
     <ToolBarContent>
@@ -83,7 +81,6 @@
     private string? _search;
     private bool _loading = true;
     private bool _busy;
-    private bool _dense;
 
     protected override async Task OnInitializedAsync()
     {
@@ -110,13 +107,6 @@
         }
 
         _loading = false;
-    }
-
-    // Auf schmalen Bildschirmen (unter 960 px) wird die Tabelle dichter dargestellt.
-    private void OnBreakpointChanged(Breakpoint breakpoint)
-    {
-        _dense = breakpoint < Breakpoint.Md;
-        StateHasChanged();
     }
 
     private bool MatchesSearch(UserModel user) =>

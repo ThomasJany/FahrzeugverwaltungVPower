@@ -1,0 +1,49 @@
+<MudTextField @ref="_field" T="string" Value="Value" ValueChanged="OnValueChangedAsync" Label="@Label"
+              Variant="Variant.Outlined" Required="Required" Disabled="Disabled" HelperText="@HelperText"
+              Immediate="true" DebounceInterval="500" Validation="@Validator" />
+
+@code {
+    private MudTextField<string> _field = null!;
+
+    /// <summary>Der Wert des Feldes.</summary>
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+
+    /// <summary>Wird aufgerufen, wenn sich der Wert geändert hat (0,5 s nach dem letzten Tastendruck).</summary>
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    /// <summary>Die Beschriftung des Feldes.</summary>
+    [Parameter]
+    public string? Label { get; set; }
+
+    /// <summary>Ein Text unter dem Feld, solange kein Fehler angezeigt wird.</summary>
+    [Parameter]
+    public string? HelperText { get; set; }
+
+    /// <summary>Kennzeichnet das Feld als Pflichtfeld (Stern an der Beschriftung).</summary>
+    [Parameter]
+    public bool Required { get; set; }
+
+    /// <summary>Sperrt das Feld, zum Beispiel für Benutzer ohne Bearbeitungsrecht.</summary>
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    /// <summary>Die Prüfregel: liefert eine Fehlermeldung oder <see langword="null"/>.</summary>
+    [Parameter]
+    public Func<string?, string?>? Validator { get; set; }
+
+    // Das Feld wird nach dem Übernehmen des Wertes erneut geprüft: MudBlazor prüft bei verzögerter Eingabe
+    // sonst noch mit dem vorherigen Wert und zeigt die Meldung einen Schritt zu spät.
+    private async Task OnValueChangedAsync(string value)
+    {
+        Value = value;
+        await ValueChanged.InvokeAsync(value);
+        await _field.ValidateAsync();
+    }
+
+    /// <summary>
+    /// Prüft das Feld und zeigt eine Meldung an, auch wenn es noch nicht berührt wurde.
+    /// </summary>
+    public Task ValidateAsync() => _field.ValidateAsync();
+}

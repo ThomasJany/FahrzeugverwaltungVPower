@@ -62,11 +62,21 @@ Tests: `dotnet test test/FahrzeugverwaltungVPower.Test`
   Bearbeiten. Das Passwort wird zweimal eingegeben. Beim Bearbeiten lässt ein leeres Passwortfeld das bisherige
   Passwort unverändert. Löschen fragt immer in einem Dialog nach. Die Eingaben werden schon beim Tippen geprüft,
   mit 0,5 Sekunden Verzögerung nach dem letzten Tastendruck.
+- **Fahrzeuge (alle Rollen):** Tabelle mit Kennzeichen, Halter, Fahrzeug, HU und VIN, sortierbar und mit Suche. Die
+  HU ist rot, wenn sie abgelaufen ist, und gelb, wenn sie in den nächsten 3 Monaten fällig wird. Klick auf eine
+  Zeile öffnet die Detailseite mit allen Feldern. Anlegen und Löschen dürfen Creator und Admin, Bearbeiten
+  zusätzlich der Editor. Der Viewer sieht die Detailseite nur lesend. Löschen fragt immer in einem Dialog nach.
+- **Tabellen:** Beide Tabellen sind unabhängig von der Bildschirmgröße in der dichten Darstellung.
+- **Prüfung der Eingaben:** Die Felder werden schon beim Tippen geprüft, mit 0,5 Sekunden Verzögerung nach dem
+  letzten Tastendruck. Die Regeln der Oberfläche sind eine Kopie der Validatoren in Core (siehe Ausblick). Ob eine
+  E-Mail-Adresse oder VIN schon vergeben ist, prüft nur die API beim Speichern.
 - **Hell/Dunkel:** Umschalter in der Kopfzeile. Zu Beginn gilt die Einstellung des Systems.
-- **TestUser erstellen:** Der Knopf auf der Benutzerseite legt einen Benutzer mit zufälligem Namen, einer
-  zufälligen Rollenkombination (nie Admin) und einer noch nicht vergebenen Adresse `vorname.nachname@example.test`
-  an. Das Passwort aller Testbenutzer steht in der Meldung nach dem Anlegen. **Der Knopf ist nur für
-  Präsentationszwecke gedacht** und gehört in einer echten Anwendung nicht in die Oberfläche.
+- **TestUser erstellen / Testfahrzeug zufügen:** Die Knöpfe auf der Benutzer- bzw. Fahrzeugseite legen einen
+  Datensatz mit zufälligen Daten an. Ein Testbenutzer hat eine zufällige Rollenkombination (nie Admin) und eine noch
+  nicht vergebene Adresse `vorname.nachname@example.test`. Das Passwort aller Testbenutzer steht in der Meldung
+  nach dem Anlegen. Ein Testfahrzeug hat gültige Daten und eine noch nicht vergebene VIN, die HU ist gemischt
+  abgelaufen, bald fällig oder länger gültig. **Beide Knöpfe sind nur für Präsentationszwecke gedacht** und gehören
+  in einer echten Anwendung nicht in die Oberfläche.
 
 ## Mit Swagger testen
 
@@ -137,3 +147,9 @@ Die rechte Spalte nennt die Stelle im Code.
 ## Ausblick
 
 - Logging mit Serilog, nur in die Datenbank.
+- Gemeinsames Projekt `FahrzeugverwaltungVPower.Contracts` für die Prüfregeln: Heute stehen die Regeln für Benutzer
+  und Fahrzeuge zweimal im Code, als FluentValidation-Validatoren in Core und als Kopie in der Oberfläche
+  (`UI/Shared/UserRules.cs`, `UI/Shared/VehicleRules.cs`). Die Basisklassen der Commands und die synchronen
+  Validatoren (`UserCommandValidatorBase`, `VehicleCommandValidatorBase`) könnten in ein kleines Projekt ziehen, das
+  nur FluentValidation braucht und von Core und der Oberfläche genutzt wird. Die Prüfungen auf doppelte E-Mail und
+  VIN bleiben in Core, weil sie die Datenbank brauchen. Für dieses Übungsprojekt war der Umbau zu aufwändig.
