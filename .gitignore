@@ -480,3 +480,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Startkonfigurationen des Werkzeugs, nur lokal
+.claude/launch.json
