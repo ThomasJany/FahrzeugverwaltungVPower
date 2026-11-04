@@ -1,4 +1,6 @@
-﻿using FahrzeugverwaltungVPower.Core.Security;
+﻿using FahrzeugverwaltungVPower.API.Security;
+using FahrzeugverwaltungVPower.Core.Abstractions;
+using FahrzeugverwaltungVPower.Core.Security;
 using FahrzeugverwaltungVPower.Infrastructure;
 using FluentValidation;
 
@@ -40,6 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddValidatorsFromAssembly(typeof(Core.Entities.Entity).Assembly);
         
         services.AddApiSecurity(configuration);
+        services.AddScoped<ICurrentUser, CurrentUser>();
         return services;
     }
 }

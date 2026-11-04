@@ -19,6 +19,9 @@ public sealed class TestIdentity : IDisposable
     /// <summary>E-Mail-Adresse des Testbenutzers.</summary>
     public const string Email = "max@mustermann.de";
 
+    /// <summary>E-Mail-Adresse eines zweiten Testbenutzers, zum Prüfen von Doppelungen.</summary>
+    public const string OtherEmail = "erika@mustermann.de";
+
     /// <summary>Passwort des Testbenutzers, erfüllt die Passwortregeln.</summary>
     public const string Password = "Testpasswort1234";
 
@@ -64,15 +67,19 @@ public sealed class TestIdentity : IDisposable
     /// Legt den Testbenutzer mit <see cref="Email"/> und <see cref="Password"/> und den angegebenen Rollen an.
     /// </summary>
     /// <param name="roles">Die Rollen des Benutzers, sie sind in der Datenbank vorbelegt.</param>
-    public async Task<ApplicationUser> CreateUserAsync(string[] roles)
+    /// <param name="email">E-Mail-Adresse und Login-Name, Standard ist <see cref="Email"/>.</param>
+    /// <param name="firstName">Vorname, Standard ist "Max".</param>
+    /// <param name="lastName">Nachname, Standard ist "Mustermann".</param>
+    public async Task<ApplicationUser> CreateUserAsync(
+        string[] roles, string email = Email, string firstName = "Max", string lastName = "Mustermann")
     {
         ApplicationUser user = new()
         {
             Id = Guid.NewGuid(),
-            UserName = Email,
-            Email = Email,
-            FirstName = "Max",
-            LastName = "Mustermann"
+            UserName = email,
+            Email = email,
+            FirstName = firstName,
+            LastName = lastName
         };
 
         IdentityResult created = await UserManager.CreateAsync(user, Password);

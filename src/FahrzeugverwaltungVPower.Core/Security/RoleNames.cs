@@ -24,4 +24,9 @@ public static class RoleNames
     /// Rolle, die Ansichtsrechte besitzt.
     /// </summary>
     public const string Viewer = "Viewer";
+
+    /// <summary>
+    /// Alle Rollennamen, zum Prüfen von Eingaben.
+    /// </summary>
+    public static readonly IReadOnlyList<string> All = [Admin, Creator, Editor, Viewer];
 }

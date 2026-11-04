@@ -1,8 +1,8 @@
-﻿using FahrzeugverwaltungVPower.Core.Entities;
-using MediatR;
+﻿using MediatR;
 
 namespace FahrzeugverwaltungVPower.Core.Queries.Users;
 
-public class GetAllUsersQuery : IRequest<ICollection<ApplicationUser>>
-{
-}
+/// <summary>
+/// Abfrage aller Benutzer.
+/// </summary>
+public record GetAllUsersQuery : IRequest<IReadOnlyList<UserDto>>;
