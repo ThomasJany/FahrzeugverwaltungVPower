@@ -187,6 +187,14 @@ die API mit der Konsole weiter und meldet es als Warnung.
 gelöscht werden). Die E-Mail-Adressen bei Anmeldungen sind personenbezogene Daten und brauchen in echten Anwendungen
 eine Löschfrist.
 
+## Lizenz
+
+Der Quellcode dieses Projekts steht unter der [MIT-Lizenz](LICENSE). Die verwendeten Bibliotheken liegen nicht im
+Repository, sondern werden über NuGet geladen und behalten ihre eigenen Lizenzen (siehe nächster Abschnitt). Die
+Lizenzen der Bibliotheken (MIT, Apache-2.0, BSD-3-Clause) schränken die Wahl der Lizenz für den eigenen Quellcode nicht
+ein. Eine Ausnahme ist MediatR mit einer eigenen Lizenz des Herstellers, siehe Entscheidungen. Wer die Anwendung als
+Programm weitergibt, statt nur den Quellcode, muss die Lizenzen der enthaltenen Bibliotheken beachten.
+
 ## Verwendete Bibliotheken (Drittanbieter, nicht von Microsoft)
 
 Lizenzangaben aus den NuGet-Metadaten der verwendeten Versionen bzw. aus den Dateien selbst.
