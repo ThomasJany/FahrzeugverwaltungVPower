@@ -17,7 +17,7 @@ public static class ApiEndpoints
     /// Adresse der API für ein echtes Android- oder iOS-Gerät, zum Beispiel <c>http://192.168.0.20:5112/</c>
     /// (IP-Adresse des Rechners im selben WLAN). Leer lassen, wenn die App nur im Emulator oder unter Windows läuft.
     /// </summary>
-    public const string PhysicalDeviceUrl = "http://192.168.178.48:5112/";
+    public const string PhysicalDeviceUrl = "";
 
     /// <summary>
     /// Die Basisadresse der API für die Plattform, auf der die App gerade läuft.

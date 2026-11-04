@@ -191,10 +191,8 @@ Die rechte Spalte nennt die Stelle im Code.
 | Selbst ausgestellte JWT ohne Refresh-Token: ausgestellte Tokens lassen sich nicht widerrufen, nach Löschen oder Rollenwechsel eines Benutzers gelten sie bis zum Ablauf | `Infrastructure/Security/JwtTokenService.cs` |
 | Anmeldung mit `UserManager` statt `SignInManager`, damit Core frei von ASP.NET bleibt | `Core/Commands/Auth/Handlers/LoginCommandHandler.cs` |
 | Rechte der Rollen, Admin als Ergänzung zur Aufgabe | `API/SecurityServiceCollectionExtensions.cs` |
-| Fahrzeuge werden über die technische Id angesprochen, weil die VIN änderbar ist (eine Korrektur würde sonst die Adresse des Fahrzeugs ändern) | `API/Controllers/VehicleController.cs` |
 | Benutzer werden gelöscht statt deaktiviert, deshalb speichert `CreatedBy` die Id des Benutzers ohne Fremdschlüssel | `Core/Commands/Users/Handlers/DeleteUserCommandHandler.cs`, `Core/Entities/Entity.cs` |
-| Swagger steht vor der Anmeldung, damit man sich dort einloggen kann | `API/Program.cs` |
-| Eigener Datenbankname (`FahrzeugverwaltungVPower_Jany`), damit mehrere Projekte auf demselben Rechner nicht dieselbe Datenbank benutzen | `API/appsettings.json` (`ConnectionStrings:Default`) |
+| Datenbankname `FahrzeugverwaltungVPower_Jany`, damit mehrere Projekte auf demselben Rechner nicht dieselbe Datenbank benutzen | `API/appsettings.json` (`ConnectionStrings:Default`) |
 
 ## Ausblick
 
@@ -204,4 +202,66 @@ Die rechte Spalte nennt die Stelle im Code.
   (`UI/Shared/UserRules.cs`, `UI/Shared/VehicleRules.cs`). Die Basisklassen der Commands und die synchronen
   Validatoren (`UserCommandValidatorBase`, `VehicleCommandValidatorBase`) könnten in ein kleines Projekt ziehen, das
   nur FluentValidation braucht und von Core und der Oberfläche genutzt wird. Die Prüfungen auf doppelte E-Mail und
-  VIN bleiben in Core, weil sie die Datenbank brauchen. Für dieses Übungsprojekt war der Umbau zu aufwändig.
+  VIN bleiben in Core, weil sie die Datenbank brauchen.
+- **Automatisches Einlesen des Fahrzeugscheins** (Aufgabe 6): aus Zeitgründen nicht umgesetzt. Das Konzept steht im nächsten
+  Abschnitt.
+
+### Konzept: Fahrzeugschein einlesen
+
+**Ziel:** Ein Foto oder Scan der Zulassungsbescheinigung Teil I füllt das Formular "Neues Fahrzeug" vor. Gespeichert
+wird nichts automatisch: Der Benutzer sieht die erkannten Werte im Formular, prüft sie und speichert selbst.
+
+**Entscheidung: Tesseract, lokal.** Ein Fahrzeugschein enthält Name und Anschrift des Halters, also personenbezogene
+Daten. Ein Cloud-Dienst würde das Bild zur Verarbeitung an einen Drittanbieter senden. Deshalb wird die Erkennung mit
+Tesseract (Open Source, Apache-2.0, kostenlos) in der eigenen API ausgeführt. Das Bild verlässt den Rechner nicht und
+wird nach der Erkennung verworfen, es wird nicht gespeichert. Alternativen wären Cloud-Dienste zur Dokumentenerkennung
+oder Bildmodelle per API gewesen, sie wurden aus dem genannten Datenschutzgrund nicht gewählt und deshalb nicht
+weiter untersucht.
+
+**Ablauf**
+
+1. **Bild beschaffen:** Im Web über die Dateiauswahl. In der MAUI-App zusätzlich über die Gerätekamera. 
+   Dafür käme eine Schnittstelle in der Razor-Klassenbibliothek analog zu `ITokenStore`, die der
+   jeweilige Host umsetzt. Das Bild wird vor dem Senden verkleinert.
+2. **API-Endpunkt** (zum Beispiel `POST api/vehicles/ScanRegistration`, Berechtigungen wie beim Anlegen), mit Begrenzung von
+   Dateityp und -größe. Die Erkennung läuft ausschließlich dort.
+3. **Vorbereiten:** Drehung laut EXIF-Angabe anwenden, dann die Ausrichtung erkennen.
+4. **Erkennen:** Tesseract mit den Sprachdaten `deu` und `osd` und einem Modus für verstreuten Text, weil ein
+   Formular keinen Fließtext enthält. Ergebnis sind Wörter mit Position und Sicherheit.
+5. **Felder zuordnen** (Extraktion, siehe unten).
+6. **Prüfen:** Jeder erkannte Wert läuft durch dieselben Regeln wie die Eingabe im Formular (`VehicleRules`). Was
+   durchfällt, wird markiert und nicht stillschweigend übernommen.
+7. **Antwort:** Die erkannten Felder, die Sicherheit je Feld und Warnungen. Die Oberfläche füllt das Formular vor und
+   hebt unsichere Felder hervor. Die Eingabeprüfung im Formular erledigt den Rest.
+
+**Felder zuordnen:** Die Zulassungsbescheinigung hat feste Feldkennungen (A Kennzeichen, B Erstzulassung,
+C.1.1 und C.1.2 Halter, D.1 bis D.3 Hersteller, Typ und Modell, E VIN, 2.1 HSN, 2.2 TSN). Zwei Wege ergänzen sich:
+
+- Werte mit eindeutigem Muster werden unabhängig von ihrer Lage gefunden: die VIN (17 Zeichen ohne I, O, Q), das
+  Kennzeichen, Datumsangaben (`dd.MM.yyyy`), HSN (4 Ziffern) und TSN.
+- Freitexte (Halter, Hersteller, Typ, Modell) werden über ihre Feldkennung gefunden: Die Kennung suchen und den Text
+  daneben bzw. darunter nehmen.
+
+Erkennung (Bild zu Wörtern) und Extraktion (Wörter zu Feldern) sind getrennte Klassen. Die Extraktion lässt sich so mit
+gespeicherten Beispielausgaben ohne Tesseract in den Unit-Tests prüfen.
+
+**Schräg, quer, auf dem Kopf:** Zuerst die EXIF-Drehung, dann die Ausrichtungserkennung von Tesseract (0, 90, 180, 270
+Grad). Als Absicherung kann das Bild in allen vier Drehungen erkannt und die gewählt werden, bei der die meisten Felder
+die Prüfregeln erfüllen. Schiefe Aufnahmen (Perspektive) und starke Schräglage wären ein weiterer Ausbauschritt, zum
+Beispiel mit einer Bildbibliothek mit freier Lizenz.
+
+**Voraussichtliche Bausteine:** Tesseract (Apache-2.0) mit einem .NET-Wrapper, der .NET 10 und die Betriebssysteme der
+API unterstützt (zum Beispiel `Tesseract.CrossPlatform`), und die Sprachdateien `deu` und `osd`, die mit der API
+ausgeliefert werden. Version und Lizenz sind vor dem Einbau auf NuGet zu prüfen. Bei der Bildverarbeitung ist auf die
+Lizenz zu achten: ImageSharp ab Version 3 steht unter einer Lizenz mit Bedingungen für kommerzielle Nutzung. Eine
+Alternative mit MIT-Lizenz wäre SkiaSharp.
+
+**Grenzen:** Tesseract braucht ausreichend große, kontrastreiche Schrift (grob 20 bis 30 Pixel Höhe für Kleinbuchstaben)
+und gerade Textzeilen. Der Sicherheitshintergrund des Dokuments, Spiegelungen und Schatten mindern die Trefferquote.
+Alte Fahrzeugscheine (vor Teil I und II) haben ein anderes Layout und wären nicht abgedeckt. Ob das HU-Datum zuverlässig
+auf dem Dokument steht, müssten Beispieldokumente zeigen, sonst bleibt es ein manuelles Pflichtfeld.
+
+**Nächste Schritte:** Einige Muster- oder geschwärzte Dokumente mit den richtigen Werten sammeln (nicht in das
+Repository), mit der Tesseract-Kommandozeile prüfen, was ohne Vorverarbeitung erkannt wird, daraus Vorverarbeitung und
+Extraktion ableiten und die Trefferquote je Feld messen. Danach Upload im Web, Endpunkt in der API und zuletzt die Kamera in
+der MAUI-App.
