@@ -1,4 +1,5 @@
-﻿using FahrzeugverwaltungVPower.Infrastructure;
+﻿using FahrzeugverwaltungVPower.Core.Security;
+using FahrzeugverwaltungVPower.Infrastructure;
 using FluentValidation;
 
 namespace FahrzeugverwaltungVPower.API;
@@ -23,6 +24,11 @@ public static class ServiceCollectionExtensions
 
         services.AddInfrastructureServices(connectionString);
 
+        services.AddOptions<JwtOptions>()
+                .Bind(configuration.GetSection(JwtOptions.SectionName))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+        
         // Die Lizenz von MediatR hat sich vor Kurzem geändert, so dass es nicht mehr 100% kostenlos ist. Ich habe mich entschieden, es trotzdem zu verwenden, da ich es bereits kenne und es mir die Arbeit erleichtert. Die Community-Edition ist jedoch weiterhin kostenlos und darf für dieses Projekt verwendet werden. Im PROD-Code würde ich ein anderes Paket nutzen, oder es müsste eine Lizenz beschafft werden.
         // TODO: Alternativen für MediatR suchen.
         services.AddMediatR(cfg =>
@@ -32,7 +38,8 @@ public static class ServiceCollectionExtensions
         });
         
         services.AddValidatorsFromAssembly(typeof(Core.Entities.Entity).Assembly);
-
+        
+        services.AddApiSecurity(configuration);
         return services;
     }
 }

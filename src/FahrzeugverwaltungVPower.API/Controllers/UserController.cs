@@ -1,11 +1,14 @@
 using FahrzeugverwaltungVPower.Core.Entities;
+using FahrzeugverwaltungVPower.Core.Security;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FahrzeugverwaltungVPower.API.Controllers;
 
 [ApiController]
 [Route("api/[action]")]
+[Authorize(Policy = PolicyNames.CanManageUsers)]
 public class UserController(IMediator mediator) : ApiControllerBase(mediator)
 {
     [HttpGet]

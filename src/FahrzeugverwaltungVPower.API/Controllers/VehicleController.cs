@@ -1,7 +1,9 @@
 using FahrzeugverwaltungVPower.Core.Commands.Vehicles;
 using FahrzeugverwaltungVPower.Core.Entities;
 using FahrzeugverwaltungVPower.Core.Queries.Vehicles;
+using FahrzeugverwaltungVPower.Core.Security;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FahrzeugverwaltungVPower.API.Controllers;
@@ -18,6 +20,7 @@ public class VehicleController(IMediator mediator) : ApiControllerBase(mediator)
     /// Liefert alle Fahrzeuge.
     /// </summary>
     [HttpGet]
+    [Authorize(Policy = PolicyNames.CanView)]
     public async Task<ICollection<Vehicle>> GetAllVehicles() =>
         await Mediator.Send(new GetAllVehiclesQuery());
 
@@ -27,6 +30,7 @@ public class VehicleController(IMediator mediator) : ApiControllerBase(mediator)
     /// <param name="vin">VIN des gesuchten Fahrzeugs.</param>
     /// <param name="cancellationToken">Token zum Abbrechen des Vorgangs.</param>
     [HttpGet("{vin}")]
+    [Authorize(Policy = PolicyNames.CanView)]
     public async Task<ActionResult<Vehicle>> GetVehicleByVin(string vin, CancellationToken cancellationToken)
     {
         Vehicle? vehicle = await Mediator.Send(new GetVehicleQuery(vin), cancellationToken);
@@ -39,6 +43,7 @@ public class VehicleController(IMediator mediator) : ApiControllerBase(mediator)
     /// <param name="command">Die Daten des neuen Fahrzeugs.</param>
     /// <param name="cancellationToken">Token zum Abbrechen des Vorgangs.</param>
     [HttpPost]
+    [Authorize(Policy = PolicyNames.CanCreate)]
     public async Task<IActionResult> CreateVehicle([FromBody] CreateVehicleCommand command, CancellationToken cancellationToken)
     {
         Guid id = await Mediator.Send(command, cancellationToken);
@@ -52,6 +57,7 @@ public class VehicleController(IMediator mediator) : ApiControllerBase(mediator)
     /// <param name="command">Die neuen Daten des Fahrzeugs.</param>
     /// <param name="cancellationToken">Token zum Abbrechen des Vorgangs.</param>
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = PolicyNames.CanEdit)]
     public async Task<IActionResult> UpdateVehicle(Guid id, [FromBody] UpdateVehicleCommand command, CancellationToken cancellationToken)
     {
         bool updated = await Mediator.Send(command with { Id = id }, cancellationToken);
@@ -64,6 +70,7 @@ public class VehicleController(IMediator mediator) : ApiControllerBase(mediator)
     /// <param name="vin">VIN des zu löschenden Fahrzeugs.</param>
     /// <param name="cancellationToken">Token zum Abbrechen des Vorgangs.</param>
     [HttpDelete("{vin}")]
+    [Authorize(Policy = PolicyNames.CanDelete)]
     public async Task<IActionResult> DeleteVehicleByVin(string vin, CancellationToken cancellationToken)
     {
         bool deleted = await Mediator.Send(new DeleteVehicleCommand(vin), cancellationToken);

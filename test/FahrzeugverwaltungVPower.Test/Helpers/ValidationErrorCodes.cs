@@ -14,6 +14,9 @@ internal static class ValidationErrorCodes
     /// <summary>Code der Regel MaximumLength.</summary>
     public const string MaxLength = "MaximumLengthValidator";
 
+    /// <summary>Code der Regel EmailAddress.</summary>
+    public const string EmailAddress = "EmailValidator";
+
     /// <summary>Code der Regel Must.</summary>
     public const string Predicate = "PredicateValidator";
 
