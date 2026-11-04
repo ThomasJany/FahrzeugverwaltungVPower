@@ -51,6 +51,9 @@ public static class ServiceCollectionExtensions
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(typeof(Core.Entities.Entity).Assembly);
+            // Reihenfolge ist wichtig: Die zuerst registrierte Pipeline umschließt die weiteren. Das Logging liegt
+            // außen und sieht deshalb auch die Ablehnungen der Validierung.
+            cfg.AddOpenBehavior(typeof(Core.Behaviors.LoggingBehavior<,>));
             cfg.AddOpenBehavior(typeof(Core.Behaviors.ValidationBehavior<,>));
         });
         

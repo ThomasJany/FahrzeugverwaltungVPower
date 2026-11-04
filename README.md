@@ -159,6 +159,34 @@ angesprochen (zum Beispiel `api/vehicles/GetVehicleById/{id}`). Die VIN eines Fa
 | Creator | ansehen, bearbeiten, anlegen und löschen |
 | Admin | alle Fahrzeugaktionen und die Benutzerverwaltung |
 
+## Logging
+
+Die API schreibt mit Serilog in die **Konsole** und in die **Datenbanktabelle `Logs`** (gleiche Datenbank wie die
+Anwendung, die Tabelle wird beim ersten Start angelegt). Protokolliert wird nur das Folgende:
+
+- **Jede Aktion** (Anlegen, Lesen, Ändern, Löschen von Fahrzeugen und Benutzern) mit Name der Aktion, Id des Benutzers,
+  der sie ausgeführt hat, und Id des betroffenen Datensatzes. Beispiel: `CreateVehicle erfolgreich. Benutzer: …, Id: …`.
+  Eine abgelehnte Aktion (Validierung, zum Beispiel doppelte VIN) steht als Warnung mit Feldnamen und Fehlercodes im
+  Log, ein Ändern oder Löschen ohne Wirkung (Datensatz gibt es nicht) ebenfalls.
+- **Anmeldungen:** erfolgreich als Information, fehlgeschlagen als Warnung, jeweils mit der E-Mail-Adresse. Das
+  Passwort wird nie protokolliert.
+- **Unerwartete Exceptions** als Fehler mit Exception, Aktion und Benutzer. Erwartete Validierungsfehler gelten nicht
+  als Exception.
+
+Das Framework (Microsoft, System) meldet nur Warnungen und Fehler, damit das Log nicht von Anfragen und
+SQL-Befehlen überflutet wird. Die Inhalte der Datensätze (Namen, Halter, Kennzeichen) stehen nicht im Log. Die Tabelle
+enthält die Spalten `Message`, `Level`, `TimeStamp`, `Exception` und das ganze Ereignis als JSON (`LogEvent`).
+
+**Umsetzung:** Die Protokollierung ist ein "Interceptor", eine MediatR-Pipeline (`Core/Behaviors/LoggingBehavior.cs`),
+die vor der Validierung läuft und deshalb jede Anfrage und jede Exception sieht. Serilog selbst wird nur in der API
+eingerichtet (`API/LoggingSetup.cs`, `API/Program.cs`). Beim Start schreibt das Log zunächst nur in die Konsole,
+weil es die Datenbank erst nach den Migrationen gibt. Danach wird die Tabelle eingeschaltet. Gelingt das nicht, läuft
+die API mit der Konsole weiter und meldet es als Warnung.
+
+**Grenzen:** Es gibt keine Aufbewahrungsfrist, die Tabelle wächst unbegrenzt (in Produktion sollten alte Einträge
+gelöscht werden). Die E-Mail-Adressen bei Anmeldungen sind personenbezogene Daten und brauchen in echten Anwendungen
+eine Löschfrist.
+
 ## Verwendete Bibliotheken (Drittanbieter, nicht von Microsoft)
 
 Lizenzangaben aus den NuGet-Metadaten der verwendeten Versionen bzw. aus den Dateien selbst.
@@ -171,6 +199,8 @@ Bibliotheken von Microsoft (.NET, ASP.NET Core, Entity Framework Core, MSTest u.
 | Swashbuckle.AspNetCore 10.3.1 | Swagger-Dokumentation und -Oberfläche | MIT |
 | Swagger UI (JavaScript, in Swashbuckle enthalten) | Oberfläche zum Testen der API | Apache-2.0 |
 | MudBlazor 9.12.0 | Komponenten und Layout der Oberfläche | MIT |
+| Serilog.AspNetCore 10.0.0 (mit Serilog 4.3.1) | Logging | Apache-2.0 |
+| Serilog.Sinks.MSSqlServer 10.0.0 | Logging in die SQL-Server-Tabelle `Logs` | Apache-2.0 |
 | NSubstitute 6.2.0 (nur Tests) | Mocks | BSD-3-Clause |
 | Shouldly 4.3.0 (nur Tests) | Prüfungen in Tests | BSD-3-Clause |
 
@@ -184,6 +214,7 @@ Die rechte Spalte nennt die Stelle im Code.
 
 | Entscheidung | Wo im Code |
 |---|---|
+| Die Prüfung des Kennzeichens kontrolliert nicht die Form, denn es gibt zu viele Varianten (Stadtkennzeichen mit 1 bis 3 Zeichen, 1 bis 2 Buchstaben, 1 bis 4 Ziffern, Zusätze wie H oder E, Behörden-, Saison-, Rot- und Ausfuhrkennzeichen). Eine genaue Prüfung würde gültige Kennzeichen ablehnen. Geprüft werden nur die zulässigen Zeichen (Buchstaben inklusive Umlaute, Ziffern, Leerzeichen, Bindestrich) und die Gesamtlänge (2 bis 11 Zeichen) | `Core/Commands/Vehicles/Validators/VehicleCommandValidatorBase.cs`, `UI/Shared/VehicleRules.cs` |
 | MediatR trotz geänderter Lizenz (Community-Lizenz, Lernprojekt) | `API/ServiceCollectionExtensions.cs` |
 | MudBlazor statt Bootstrap: fertige Tabelle mit Sortierung, Dialoge und Eingabefelder mit Validierung, MIT-Lizenz. Schrift: Systemschrift statt Google Fonts (keine Verbindung zu Drittservern) | `UI/Layout/MainLayout.razor`, `UI/Services/UiServiceCollectionExtensions.cs` |
 | Zugangsdaten des Administrators und JWT-Schlüssel in `appsettings.json` statt in Secrets (Projekt soll ohne Einrichtung laufen). In echten Anwendungen gehören sie in User-Secrets, Umgebungsvariablen oder einen Secret-Store | `Infrastructure/Data/AdminSeeder.cs`, `Core/Security/JwtOptions.cs` |
@@ -192,11 +223,13 @@ Die rechte Spalte nennt die Stelle im Code.
 | Anmeldung mit `UserManager` statt `SignInManager`, damit Core frei von ASP.NET bleibt | `Core/Commands/Auth/Handlers/LoginCommandHandler.cs` |
 | Rechte der Rollen, Admin als Ergänzung zur Aufgabe | `API/SecurityServiceCollectionExtensions.cs` |
 | Benutzer werden gelöscht statt deaktiviert, deshalb speichert `CreatedBy` die Id des Benutzers ohne Fremdschlüssel | `Core/Commands/Users/Handlers/DeleteUserCommandHandler.cs`, `Core/Entities/Entity.cs` |
+| Logging als MediatR-Pipeline statt in jedem Handler: eine Stelle, sieht auch abgelehnte Anfragen und Exceptions. Das Log enthält Ids statt Inhalte, Passwörter nie | `Core/Behaviors/LoggingBehavior.cs` |
+| Log zuerst nur in die Konsole, die Datenbanktabelle kommt erst nach den Migrationen dazu (vorher gibt es die Datenbank nicht) | `API/LoggingSetup.cs`, `API/Program.cs` |
 | Datenbankname `FahrzeugverwaltungVPower_Jany`, damit mehrere Projekte auf demselben Rechner nicht dieselbe Datenbank benutzen | `API/appsettings.json` (`ConnectionStrings:Default`) |
 
 ## Ausblick
 
-- Logging mit Serilog, nur in die Datenbank.
+- Logging: Aufbewahrungsfrist für die Tabelle `Logs` (alte Einträge löschen), Anfragen-Log mit Dauer und Statuscode.
 - Gemeinsames Projekt `FahrzeugverwaltungVPower.Contracts` für die Prüfregeln: Heute stehen die Regeln für Benutzer
   und Fahrzeuge zweimal im Code, als FluentValidation-Validatoren in Core und als Kopie in der Oberfläche
   (`UI/Shared/UserRules.cs`, `UI/Shared/VehicleRules.cs`). Die Basisklassen der Commands und die synchronen

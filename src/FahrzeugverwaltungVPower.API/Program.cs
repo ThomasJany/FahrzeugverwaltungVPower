@@ -2,8 +2,16 @@ using FahrzeugverwaltungVPower.API;
 using FahrzeugverwaltungVPower.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using Serilog;
+using Serilog.Extensions.Hosting;
+
+// Serilog: Zuerst nur Konsole, die Datenbanktabelle für das Log gibt es erst nach den Migrationen (siehe unten).
+ReloadableLogger logger = LoggingSetup.CreateBootstrapLogger();
+Log.Logger = logger;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog(logger);
 
 builder.Services.AddApiServices(builder.Configuration);
 
@@ -49,7 +57,10 @@ using (IServiceScope scope = app.Services.CreateScope())
     // 
     // TODO: Automatisches Anwenden von Migrationen entfernen.
     await dbContext.Database.MigrateAsync();
-    
+
+    // Ab jetzt gibt es die Datenbank: Das Log schreibt zusätzlich in die Tabelle Logs.
+    LoggingSetup.EnableDatabase(logger, builder.Configuration.GetConnectionString("Default")!);
+
     // Legt beim ersten Start den Administrator an.
     await scope.ServiceProvider.GetRequiredService<AdminSeeder>().SeedAsync();
 }
