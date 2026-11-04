@@ -16,6 +16,11 @@
         public DateTimeOffset CreatedAt { get; set; }
 
         /// <summary>
+        /// Technische Id des Benutzers, der die Entität angelegt hat.
+        /// </summary>
+        public required Guid CreatedBy { get; set; }
+
+        /// <summary>
         /// Zeitpunkt der letzten Änderung an der Entität.
         /// </summary>
         public DateTimeOffset ModifiedAt { get; set; }

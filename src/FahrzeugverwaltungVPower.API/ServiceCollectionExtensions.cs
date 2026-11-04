@@ -31,8 +31,23 @@ public static class ServiceCollectionExtensions
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
         
-        // Die Lizenz von MediatR hat sich vor Kurzem geändert, so dass es nicht mehr 100% kostenlos ist. Ich habe mich entschieden, es trotzdem zu verwenden, da ich es bereits kenne und es mir die Arbeit erleichtert. Die Community-Edition ist jedoch weiterhin kostenlos und darf für dieses Projekt verwendet werden. Im PROD-Code würde ich ein anderes Paket nutzen, oder es müsste eine Lizenz beschafft werden.
-        // TODO: Alternativen für MediatR suchen.
+        // MediatR trotz geänderter Lizenz
+        //
+        // MediatR 14.2.0 steht laut Reciprocal Public License 1.5 (RPL-1.5). Für Einzelpersonen,
+        // Bildung und kleine Firmen gibt es laut Hersteller eine kostenlose Community-Lizenz; die genauen
+        // Bedingungen stehen nicht im Paket, sondern auf der Seite des Herstellers. Ein Lizenzschlüssel ist
+        // laut Hersteller nur im produktiven kommerziellen Einsatz nötig, ohne Schlüssel erscheint eine
+        // Warnung im Log.
+        //
+        // Warum trotzdem MediatR: Das Muster aus Command, Query, Handler und Pipeline (hier für die
+        // Validierung) ist mir vertraut und spart in diesem Übungsprojekt viel Code. Die Nutzung hier ist ein
+        // nicht-kommerzielles Lernprojekt.
+        //
+        // Für Produktion: Lizenz beschaffen oder wechseln, zum Beispiel Handler direkt per Dependency
+        // Injection aufrufen oder ein freies Mediator-Paket verwenden. Die Handler hängen nur an
+        // IRequestHandler, ein Wechsel betrifft vor allem diese Registrierung und die Pipeline.
+        //
+        // TODO: Alternativen für MediatR prüfen.
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(typeof(Core.Entities.Entity).Assembly);

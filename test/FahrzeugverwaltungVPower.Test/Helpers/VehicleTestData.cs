@@ -19,6 +19,11 @@ internal static class VehicleTestData
     public const string OtherVin = "WVWZZZ1KZAW654321";
 
     /// <summary>
+    /// Id des Benutzers, der die Testfahrzeuge angelegt hat.
+    /// </summary>
+    public static readonly Guid CreatedBy = new("0f8fad5b-d9cb-469f-a165-70867728950e");
+
+    /// <summary>
     /// Ein Command, der alle Validierungsregeln erfüllt.
     /// </summary>
     public static CreateVehicleCommand CreateCommand() => new()
@@ -53,12 +58,14 @@ internal static class VehicleTestData
         HSN = "8004",
         TSN = "AJO000180",
         CreatedAt = DateTimeOffset.UtcNow,
+        CreatedBy = CreatedBy,
         ModifiedAt = DateTimeOffset.UtcNow
     };
 
     /// <summary>
     /// Ein Änderungsbefehl, der alle Validierungsregeln erfüllt. Alle Felder außer der VIN weichen von <see cref="CreateVehicle"/> ab.
     /// </summary>
+    /// <param name="id">Id des zu ändernden Fahrzeugs.</param>
     public static UpdateVehicleCommand UpdateCommand(Guid id) => new()
     {
         Id = id,

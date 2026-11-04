@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FahrzeugverwaltungVPower.API\FahrzeugverwaltungVPower.API.csproj" />
     <ProjectReference Include="..\FahrzeugverwaltungVPower.Core\FahrzeugverwaltungVPower.Core.csproj" />
   </ItemGroup>
 

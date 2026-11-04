@@ -7,6 +7,6 @@ namespace FahrzeugverwaltungVPower.Core.Commands.Vehicles;
 /// </summary>
 public record UpdateVehicleCommand : VehicleCommandBase, IRequest<bool>
 {
-    /// <summary>Id des zu ändernden Fahrzeugs.</summary>
+    /// <summary>Id des zu ändernden Fahrzeugs, wird aus der Route übernommen.</summary>
     public Guid Id { get; init; }
 }

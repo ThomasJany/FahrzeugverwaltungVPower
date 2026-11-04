@@ -10,30 +10,30 @@ namespace FahrzeugverwaltungVPower.Test.Queries.Vehicles.Handlers;
 public class GetVehicleQueryHandlerTests
 {
     [TestMethod]
-    public async Task Handle_WithExistingVin_ReturnsVehicle()
+    public async Task Handle_WithExistingId_ReturnsVehicle()
     {
         using TestDatabase database = new();
-        await database.AddAsync(
-            VehicleTestData.CreateVehicle(VehicleTestData.Vin),
-            VehicleTestData.CreateVehicle(VehicleTestData.OtherVin, "OHZ CD 45"));
+        Vehicle first = VehicleTestData.CreateVehicle(VehicleTestData.Vin);
+        Vehicle second = VehicleTestData.CreateVehicle(VehicleTestData.OtherVin, "OHZ CD 45");
+        await database.AddAsync(first, second);
         GetVehicleQueryHandler handler = new(database.Context);
 
-        // Kleinschreibung und Leerzeichen müssen normalisiert werden.
-        Vehicle? result = await handler.Handle(new GetVehicleQuery(" tmbzzz1kzaw123456 "), CancellationToken.None);
+        Vehicle? result = await handler.Handle(new GetVehicleQuery(first.Id), CancellationToken.None);
 
         result.ShouldNotBeNull();
+        result.Id.ShouldBe(first.Id);
         result.VIN.ShouldBe(VehicleTestData.Vin);
         result.LicensePlate.ShouldBe("HVL AB 123");
     }
 
     [TestMethod]
-    public async Task Handle_WithUnknownVin_ReturnsNull()
+    public async Task Handle_WithUnknownId_ReturnsNull()
     {
         using TestDatabase database = new();
         await database.AddAsync(VehicleTestData.CreateVehicle(VehicleTestData.Vin));
         GetVehicleQueryHandler handler = new(database.Context);
 
-        Vehicle? result = await handler.Handle(new GetVehicleQuery(VehicleTestData.OtherVin), CancellationToken.None);
+        Vehicle? result = await handler.Handle(new GetVehicleQuery(Guid.NewGuid()), CancellationToken.None);
 
         result.ShouldBeNull();
     }

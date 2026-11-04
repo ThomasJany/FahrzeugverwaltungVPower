@@ -8,7 +8,8 @@ namespace FahrzeugverwaltungVPower.Core.Commands.Vehicles.Handlers;
 /// Legt ein Fahrzeug an und gibt dessen Id zurück.
 /// </summary>
 /// <param name="context">Datenbankkontext zum Speichern.</param>
-public class CreateVehicleCommandHandler(IApplicationDbContext context) : IRequestHandler<CreateVehicleCommand, Guid>
+/// <param name="currentUser">Liefert die Id des angemeldeten Benutzers für das Feld CreatedBy.</param>
+public class CreateVehicleCommandHandler(IApplicationDbContext context, ICurrentUser currentUser) : IRequestHandler<CreateVehicleCommand, Guid>
 {
     /// <summary>
     /// Normalisiert die Eingaben, speichert das Fahrzeug und gibt die Id zurück.
@@ -33,6 +34,7 @@ public class CreateVehicleCommandHandler(IApplicationDbContext context) : IReque
             HSN = command.HSN.Trim(),
             TSN = command.TSN.Trim().ToUpperInvariant(),
             CreatedAt = now,
+            CreatedBy = currentUser.UserId ?? throw new InvalidOperationException("Es ist kein Benutzer angemeldet."),
             ModifiedAt = now
         };
 

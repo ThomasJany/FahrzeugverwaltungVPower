@@ -164,6 +164,9 @@ namespace FahrzeugverwaltungVPower.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateOnly>("FirstRegistrationDate")
                         .HasColumnType("date");
 

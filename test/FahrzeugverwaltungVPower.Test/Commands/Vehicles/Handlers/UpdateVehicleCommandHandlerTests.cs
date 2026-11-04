@@ -41,6 +41,7 @@ public class UpdateVehicleCommandHandlerTests
         saved.Model.ShouldBe("Passat");
         saved.HSN.ShouldBe("0603");
         saved.CreatedAt.ShouldBe(past);
+        saved.CreatedBy.ShouldBe(VehicleTestData.CreatedBy);
         saved.ModifiedAt.ShouldBe(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(5));
         await database.Context.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }

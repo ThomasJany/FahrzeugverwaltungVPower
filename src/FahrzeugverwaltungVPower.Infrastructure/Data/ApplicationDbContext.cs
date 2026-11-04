@@ -108,6 +108,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(v => v.TSN)
                   .IsRequired()
                   .HasMaxLength(9);
+
+            // Id des anlegenden Benutzers, bewusst ohne Fremdschlüssel (siehe Kommentar an Entity.CreatedBy).
+            entity.Property(v => v.CreatedBy)
+                  .IsRequired();
         });
     }
 

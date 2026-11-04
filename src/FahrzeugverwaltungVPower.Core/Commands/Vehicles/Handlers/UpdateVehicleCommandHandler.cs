@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace FahrzeugverwaltungVPower.Core.Commands.Vehicles.Handlers;
 
 /// <summary>
-/// Ändert ein vorhandenes Fahrzeug anhand der Id.
+/// Ändert ein vorhandenes Fahrzeug anhand seiner Id.
 /// </summary>
 /// <param name="context">Datenbankkontext zum Lesen und Speichern.</param>
 public class UpdateVehicleCommandHandler(IApplicationDbContext context) : IRequestHandler<UpdateVehicleCommand, bool>

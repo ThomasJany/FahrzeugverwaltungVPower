@@ -13,7 +13,7 @@ namespace FahrzeugverwaltungVPower.API.Controllers;
 /// </summary>
 /// <param name="mediator">Sendet Befehle und Abfragen an die Handler.</param>
 [ApiController]
-[Route("api/[action]")]
+[Route("api/vehicles/[action]")]
 public class VehicleController(IMediator mediator) : ApiControllerBase(mediator)
 {
     /// <summary>
@@ -25,15 +25,15 @@ public class VehicleController(IMediator mediator) : ApiControllerBase(mediator)
         await Mediator.Send(new GetAllVehiclesQuery());
 
     /// <summary>
-    /// Liefert das Fahrzeug mit der angegebenen VIN, oder 404, wenn es keines gibt.
+    /// Liefert das Fahrzeug mit der angegebenen Id, oder 404, wenn es keines gibt.
     /// </summary>
-    /// <param name="vin">VIN des gesuchten Fahrzeugs.</param>
+    /// <param name="id">Id des gesuchten Fahrzeugs.</param>
     /// <param name="cancellationToken">Token zum Abbrechen des Vorgangs.</param>
-    [HttpGet("{vin}")]
+    [HttpGet("{id:guid}")]
     [Authorize(Policy = PolicyNames.CanView)]
-    public async Task<ActionResult<Vehicle>> GetVehicleByVin(string vin, CancellationToken cancellationToken)
+    public async Task<ActionResult<Vehicle>> GetVehicleById(Guid id, CancellationToken cancellationToken)
     {
-        Vehicle? vehicle = await Mediator.Send(new GetVehicleQuery(vin), cancellationToken);
+        Vehicle? vehicle = await Mediator.Send(new GetVehicleQuery(id), cancellationToken);
         return vehicle is null ? NotFound() : Ok(vehicle);
     }
 
@@ -51,7 +51,7 @@ public class VehicleController(IMediator mediator) : ApiControllerBase(mediator)
     }
 
     /// <summary>
-    /// Ändert das Fahrzeug mit der angegebenen Id.
+    /// Ändert das Fahrzeug mit der angegebenen Id, oder 404, wenn es keines gibt. Die VIN kann dabei geändert werden.
     /// </summary>
     /// <param name="id">Id des zu ändernden Fahrzeugs.</param>
     /// <param name="command">Die neuen Daten des Fahrzeugs.</param>
@@ -65,15 +65,15 @@ public class VehicleController(IMediator mediator) : ApiControllerBase(mediator)
     }
 
     /// <summary>
-    /// Löscht das Fahrzeug mit der angegebenen VIN.
+    /// Löscht das Fahrzeug mit der angegebenen Id, oder 404, wenn es keines gibt.
     /// </summary>
-    /// <param name="vin">VIN des zu löschenden Fahrzeugs.</param>
+    /// <param name="id">Id des zu löschenden Fahrzeugs.</param>
     /// <param name="cancellationToken">Token zum Abbrechen des Vorgangs.</param>
-    [HttpDelete("{vin}")]
+    [HttpDelete("{id:guid}")]
     [Authorize(Policy = PolicyNames.CanDelete)]
-    public async Task<IActionResult> DeleteVehicleByVin(string vin, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteVehicleById(Guid id, CancellationToken cancellationToken)
     {
-        bool deleted = await Mediator.Send(new DeleteVehicleCommand(vin), cancellationToken);
+        bool deleted = await Mediator.Send(new DeleteVehicleCommand(id), cancellationToken);
         return deleted ? NoContent() : NotFound();
     }
 }

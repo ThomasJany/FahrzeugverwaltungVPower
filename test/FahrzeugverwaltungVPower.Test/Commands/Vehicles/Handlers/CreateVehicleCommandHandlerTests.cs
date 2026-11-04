@@ -17,7 +17,7 @@ public class CreateVehicleCommandHandlerTests
     public async Task Handle_WithValidCommand_SavesNormalizedVehicleAndReturnsId()
     {
         using TestDatabase database = new();
-        CreateVehicleCommandHandler handler = new(database.Context);
+        CreateVehicleCommandHandler handler = new(database.Context, CreateCurrentUser());
         CreateVehicleCommand command = VehicleTestData.CreateCommand() with
         {
             LicensePlate = " hvl ab 123 ",
@@ -39,6 +39,7 @@ public class CreateVehicleCommandHandlerTests
         saved.HolderFirstName.ShouldBe("Max");
         saved.VIN.ShouldBe(VehicleTestData.Vin);
         saved.TSN.ShouldBe("AJO000180");
+        saved.CreatedBy.ShouldBe(VehicleTestData.CreatedBy);
         saved.CreatedAt.ShouldBe(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(5));
         saved.ModifiedAt.ShouldBe(saved.CreatedAt);
         
@@ -55,9 +56,31 @@ public class CreateVehicleCommandHandlerTests
         context.SaveChangesAsync(Arg.Any<CancellationToken>())
                .ThrowsAsync(new DbUpdateException("Speichern fehlgeschlagen."));
 
-        CreateVehicleCommandHandler handler = new(context);
+        CreateVehicleCommandHandler handler = new(context, CreateCurrentUser());
 
         await Should.ThrowAsync<DbUpdateException>(
             () => handler.Handle(VehicleTestData.CreateCommand(), CancellationToken.None));
+    }
+
+    [TestMethod]
+    public async Task Handle_WithoutLoggedInUser_ThrowsAndSavesNothing()
+    {
+        using TestDatabase database = new();
+        // Ein Mock ohne Vorgabe liefert für UserId null, also ist niemand angemeldet.
+        ICurrentUser nobody = Substitute.For<ICurrentUser>();
+        CreateVehicleCommandHandler handler = new(database.Context, nobody);
+
+        await Should.ThrowAsync<InvalidOperationException>(
+            () => handler.Handle(VehicleTestData.CreateCommand(), CancellationToken.None));
+
+        (await database.Db.Vehicles.CountAsync()).ShouldBe(0);
+    }
+
+    private static ICurrentUser CreateCurrentUser()
+    {
+        ICurrentUser currentUser = Substitute.For<ICurrentUser>();
+        currentUser.UserId.Returns(VehicleTestData.CreatedBy);
+
+        return currentUser;
     }
 }

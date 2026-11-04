@@ -14,7 +14,7 @@ builder.Services.AddSwaggerGen(options =>
         Type = SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT",
-        Description = "Token aus POST /api/auth/login einfügen."
+        Description = "Token aus POST /api/auth/Login einfügen."
     });
 
     options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
@@ -36,11 +36,17 @@ using (IServiceScope scope = app.Services.CreateScope())
 {
     ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-    // Hinweis:
-    // Neue Migrationen werden bei jedem Start der API-Anwendung automatisch angewendet.
-    // Das ist eine bewusste Entscheidung, da dies "nur" ein Beispielprojekt ist.
-    // In einer Produktionsumgebung würde ich Migrationen manuell anwenden, um die Kontrolle über den Prozess zu behalten.
-
+    // Migrationen werden bei jedem Start der API automatisch angewendet.
+    // Das ist nur für dieses Übungsprojekt so gewählt: Wer die API startet, bekommt ohne weiteren Schritt
+    // eine fertige Datenbank, auch der Projektleiter auf einem neuen Rechner.
+    //  
+    // In Produktion ist das NICHT zulässig:
+    //  - Mehrere API-Instanzen würden sich gegenseitig migrieren.
+    //  - Das Datenbankkonto der API bräuchte Rechte zum Ändern des Schemas.
+    //  - Eine fehlgeschlagene Migration würde den Start der Anwendung blockieren.
+    //
+    // Stattdessen: Migration Bundle oder SQL-Skript in der Deployment-Pipeline ausführen vor dem Start.
+    // 
     // TODO: Automatisches Anwenden von Migrationen entfernen.
     await dbContext.Database.MigrateAsync();
     

@@ -1,4 +1,5 @@
-﻿using FahrzeugverwaltungVPower.Core.Commands.Vehicles;
+﻿using FahrzeugverwaltungVPower.Core.Entities;
+using FahrzeugverwaltungVPower.Core.Commands.Vehicles;
 using FahrzeugverwaltungVPower.Core.Commands.Vehicles.Validators;
 using FahrzeugverwaltungVPower.Test.Helpers;
 using FluentValidation.Results;
@@ -10,29 +11,29 @@ namespace FahrzeugverwaltungVPower.Test.Commands.Vehicles.Validators;
 public class DeleteVehicleCommandValidatorTests
 {
     [TestMethod]
-    public async Task Validate_WithExistingVin_IsValid()
+    public async Task Validate_WithExistingId_IsValid()
     {
         using TestDatabase database = new();
-        await database.AddAsync(VehicleTestData.CreateVehicle(VehicleTestData.Vin));
+        Vehicle vehicle = VehicleTestData.CreateVehicle(VehicleTestData.Vin);
+        await database.AddAsync(vehicle);
         DeleteVehicleCommandValidator validator = new(database.Context);
 
-        // Kleinschreibung und Leerzeichen müssen normalisiert werden.
-        ValidationResult result = await validator.ValidateAsync(new DeleteVehicleCommand(" tmbzzz1kzaw123456 "));
+        ValidationResult result = await validator.ValidateAsync(new DeleteVehicleCommand(vehicle.Id));
 
         result.IsValid.ShouldBeTrue();
         result.Errors.ShouldBeEmpty();
     }
 
     [TestMethod]
-    public async Task Validate_VinEmpty_IsInvalid()
+    public async Task Validate_IdEmpty_IsInvalid()
     {
         using TestDatabase database = new();
         DeleteVehicleCommandValidator validator = new(database.Context);
 
-        ValidationResult result = await validator.ValidateAsync(new DeleteVehicleCommand(""));
+        ValidationResult result = await validator.ValidateAsync(new DeleteVehicleCommand(Guid.Empty));
 
         result.IsValid.ShouldBeFalse();
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(DeleteVehicleCommand.Vin) && e.ErrorCode == ValidationErrorCodes.NotEmpty);
+        result.Errors.ShouldContain(e => e.PropertyName == nameof(DeleteVehicleCommand.Id) && e.ErrorCode == ValidationErrorCodes.NotEmpty);
     }
 
     [TestMethod]
@@ -42,9 +43,9 @@ public class DeleteVehicleCommandValidatorTests
         await database.AddAsync(VehicleTestData.CreateVehicle(VehicleTestData.Vin));
         DeleteVehicleCommandValidator validator = new(database.Context);
 
-        ValidationResult result = await validator.ValidateAsync(new DeleteVehicleCommand(VehicleTestData.OtherVin));
+        ValidationResult result = await validator.ValidateAsync(new DeleteVehicleCommand(Guid.NewGuid()));
 
         result.IsValid.ShouldBeFalse();
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(DeleteVehicleCommand.Vin) && e.ErrorCode == ValidationErrorCodes.NotFound);
+        result.Errors.ShouldContain(e => e.PropertyName == nameof(DeleteVehicleCommand.Id) && e.ErrorCode == ValidationErrorCodes.NotFound);
     }
 }

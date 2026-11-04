@@ -10,7 +10,7 @@ namespace FahrzeugverwaltungVPower.API.Controllers;
 /// </summary>
 /// <param name="mediator">Sendet Befehle und Abfragen an die Handler.</param>
 [ApiController]
-[Route("api/auth")]
+[Route("api/auth/[action]")]
 public class AuthController(IMediator mediator) : ApiControllerBase(mediator)
 {
     /// <summary>
@@ -19,7 +19,7 @@ public class AuthController(IMediator mediator) : ApiControllerBase(mediator)
     /// <param name="command">E-Mail und Passwort des Benutzers.</param>
     /// <param name="cancellationToken">Token zum Abbrechen des Vorgangs.</param>
     [AllowAnonymous]
-    [HttpPost("login")]
+    [HttpPost]
     public async Task<ActionResult<LoginResult>> Login([FromBody] LoginCommand command, CancellationToken cancellationToken)
     {
         LoginResult? result = await Mediator.Send(command, cancellationToken);
