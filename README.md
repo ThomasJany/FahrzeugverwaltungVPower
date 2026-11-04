@@ -10,8 +10,9 @@
 | `src/FahrzeugverwaltungVPower.Core` | Geschäftslogik: Entitäten, Commands und Queries, Handler, Validatoren |
 | `src/FahrzeugverwaltungVPower.Infrastructure` | Datenbankkontext, Migrationen, Identity, Token-Erzeugung, Admin-Seeder |
 | `src/FahrzeugverwaltungVPower.API` | REST-Controller, Anmeldung und Berechtigungen, Swagger |
-| `src/FahrzeugverwaltungVPower.UI` | Razor-Klassenbibliothek mit allen Seiten, Komponenten und Diensten der Oberfläche (MudBlazor). Sie ist von der Art des Hosts unabhängig und kann später auch in einer MAUI-App laufen |
+| `src/FahrzeugverwaltungVPower.UI` | Razor-Klassenbibliothek mit allen Seiten, Komponenten und Diensten der Oberfläche (MudBlazor). Sie ist von der Art des Hosts unabhängig und läuft sowohl im Blazor-Server-Host als auch in der MAUI-App |
 | `src/FahrzeugverwaltungVPower.Blazor` | Blazor-Server-Host der Oberfläche: Start, Konfiguration und Speicherort der Anmeldung |
+| `src/FahrzeugverwaltungVPower.MauiBlazor` | MAUI-Blazor-Hybrid-App (Windows, Android, iOS, Mac Catalyst): zeigt dieselbe Oberfläche, speichert die Anmeldung im sicheren Speicher des Geräts |
 | `test/FahrzeugverwaltungVPower.Test` | Unit-Tests |
 
 ## Starten
@@ -52,6 +53,57 @@ dotnet run --project src/FahrzeugverwaltungVPower.Blazor --launch-profile https
 
 Danach ist die Oberfläche unter <https://localhost:7094> erreichbar. Die Anmeldung erfolgt mit den Zugangsdaten
 des Administrators (siehe oben).
+
+### MAUI-App
+
+Die App zeigt dieselben Seiten wie die Web-Oberfläche, weil alles in `FahrzeugverwaltungVPower.UI` liegt. Der Host
+liefert nur den Speicherort der Anmeldung (sicherer Speicher des Geräts, `SecureStorageTokenStore`) und die Adresse
+der API (`ApiEndpoints.cs`). Voraussetzung ist die MAUI-Workload (in Visual Studio: "Entwicklung mit .NET Multi-Platform App UI").
+Start in Visual Studio mit `FahrzeugverwaltungVPower.MauiBlazor` als Startprojekt und Ziel "Windows-Computer" oder
+einem Android-Emulator, oder für Windows auf der Kommandozeile:
+
+```bash
+dotnet run --project src/FahrzeugverwaltungVPower.MauiBlazor -f net10.0-windows10.0.19041.0
+```
+
+**API erreichen:** "localhost" ist auf einem Emulator oder Gerät nicht der Rechner mit der API. Außerdem vertrauen
+sie dem HTTPS-Entwicklerzertifikat nicht. Deshalb spricht die App die API in der Entwicklung per HTTP auf Port 5112 an
+(Profil `http`):
+
+```bash
+dotnet run --project src/FahrzeugverwaltungVPower.API --launch-profile http
+```
+
+| Läuft auf | Adresse der API |
+|---|---|
+| Windows, Mac, iOS-Simulator | `http://localhost:5112/` |
+| Android-Emulator | `http://10.0.2.2:5112/` (so erreicht der Emulator den Rechner) |
+| Echtes Gerät | `http://<IP-Adresse des Rechners>:5112/`, einzutragen in `PhysicalDeviceUrl` in `ApiEndpoints.cs` |
+
+Für ein **echtes Gerät** muss die API im Netzwerk erreichbar sein, und Gerät und Rechner müssen im selben WLAN sein:
+
+```bash
+dotnet run --project src/FahrzeugverwaltungVPower.API --launch-profile http --urls http://0.0.0.0:5112
+```
+
+Die IP-Adresse des Rechners zeigt `ipconfig`. Die Windows-Firewall muss Port 5112 im privaten Netzwerk zulassen,
+beim ersten Start fragt Windows danach.
+
+HTTP ohne Verschlüsselung ist nur für die Entwicklung gedacht. Dafür erlauben `Platforms/Android/AndroidManifest.xml`
+(`usesCleartextTraffic`) und `Platforms/iOS/Info.plist` (`NSAllowsLocalNetworking`) HTTP, beide mit Hinweis im Kommentar.
+Für eine echte Veröffentlichung entfernen und die API per HTTPS mit gültigem Zertifikat betreiben. Eine Alternative
+für Geräte ohne gemeinsames WLAN sind Dev Tunnels von Visual Studio, die eine öffentliche HTTPS-Adresse auf die lokale API
+legen. Das ist hier nicht ausprobiert.
+
+**Layout auf kleinen Bildschirmen:** Unter 960 px Breite (Handy, schmales Fenster) liegt das Menü als Schublade über
+dem Inhalt und ist zunächst geschlossen, in der Kopfzeile bleiben nur Symbole. Das gilt in der Web-Oberfläche genauso.
+Unter Android läuft die App Edge-to-Edge: Die Oberfläche reicht bis an den Bildschirmrand, die Statusleiste ist in
+der Farbe der Kopfzeile eingefärbt. Die Abstände der Systemleisten und der Tastatur meldet `MainActivity` an die
+Seite (`SafeAreaService`, `SafeAreaBridge`), das CSS dazu steht in `wwwroot/app.css`.
+
+Stand: Die App baut für alle vier Ziele (Windows, Android, iOS, Mac Catalyst) und startet unter Windows. Auf einem
+Android-Gerät und im Emulator, unter iOS und unter Mac Catalyst wurde sie noch nicht ausgeführt (iOS und Mac
+Catalyst brauchen dafür einen Mac).
 
 Tests: `dotnet test test/FahrzeugverwaltungVPower.Test`
 

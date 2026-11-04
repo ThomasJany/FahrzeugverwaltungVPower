@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Fahrzeugverwaltung</title>
+    <base href="/" />
+    <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" />
+    <link rel="stylesheet" href="_content/FahrzeugverwaltungVPower.UI/app.css" />
+    <link rel="stylesheet" href="app.css" />
+    <link rel="icon" href="data:,">
+</head>
+
+<body>
+
+    <!-- Färbt den Bereich hinter der Statusleiste in der Farbe der Kopfzeile (Edge-to-Edge). -->
+    <div id="status-bar-fill"></div>
+
+    <!-- Die Oberfläche liegt innerhalb der Systemleisten, siehe app.css. -->
+    <div id="shell">
+        <div id="app">Wird geladen ...</div>
+    </div>
+
+    <!-- Unsichtbare Komponente, die die Abstände der Systemleisten von Android an die Seite weitergibt. -->
+    <div id="safe-area-bridge"></div>
+
+    <div id="blazor-error-ui" data-nosnippet>
+        Ein unerwarteter Fehler ist aufgetreten.
+        <a href="." class="reload">Neu laden</a>
+        <span class="dismiss">🗙</span>
+    </div>
+
+    <script>
+        window.fahrzeugverwaltungSetSafeArea = function (top, right, bottom, left) {
+            var style = document.documentElement.style;
+            style.setProperty('--native-safe-top', top + 'px');
+            style.setProperty('--native-safe-right', right + 'px');
+            style.setProperty('--native-safe-bottom', bottom + 'px');
+            style.setProperty('--native-safe-left', left + 'px');
+        };
+    </script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script src="_framework/blazor.webview.js" autostart="false"></script>
+
+</body>
+
+</html>

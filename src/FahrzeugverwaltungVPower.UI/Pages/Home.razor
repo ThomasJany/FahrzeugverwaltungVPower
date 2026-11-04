@@ -7,8 +7,6 @@
     <MudText Typo="Typo.h4" GutterBottom="true">Willkommen, @context.User.Identity?.Name</MudText>
 </AuthorizeView>
 
-<MudText Class="mb-6">Fahrzeugstammdaten aus der Zulassungsbescheinigung Teil I erfassen und verwalten.</MudText>
-
 <MudGrid>
     <AuthorizeView Roles="@UiRoles.CanView" Context="vehiclesAccess">
         <MudItem xs="12" sm="6">

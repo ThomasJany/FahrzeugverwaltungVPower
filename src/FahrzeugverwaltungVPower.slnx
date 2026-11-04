@@ -4,5 +4,6 @@
   <Project Path="FahrzeugverwaltungVPower.Blazor/FahrzeugverwaltungVPower.Blazor.csproj" />
   <Project Path="FahrzeugverwaltungVPower.Core/FahrzeugverwaltungVPower.Core.csproj" />
   <Project Path="FahrzeugverwaltungVPower.Infrastructure/FahrzeugverwaltungVPower.Infrastructure.csproj" />
+  <Project Path="FahrzeugverwaltungVPower.MauiBlazor/FahrzeugverwaltungVPower.MauiBlazor.csproj" />
   <Project Path="FahrzeugverwaltungVPower.UI/FahrzeugverwaltungVPower.UI.csproj" />
 </Solution>

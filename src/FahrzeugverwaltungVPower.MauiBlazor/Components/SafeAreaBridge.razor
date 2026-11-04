@@ -1,0 +1,23 @@
+@implements IDisposable
+@inject SafeAreaService SafeArea
+@inject IJSRuntime JS
+
+@code {
+    // Unsichtbare Komponente: reicht die Abstände der Systemleisten an die Seite weiter (CSS-Variablen, siehe wwwroot/app.css).
+    protected override void OnInitialized() => SafeArea.Changed += OnChanged;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ApplyAsync();
+        }
+    }
+
+    public void Dispose() => SafeArea.Changed -= OnChanged;
+
+    private void OnChanged() => _ = InvokeAsync(ApplyAsync);
+
+    private async Task ApplyAsync() =>
+        await JS.InvokeVoidAsync("fahrzeugverwaltungSetSafeArea", SafeArea.Top, SafeArea.Right, SafeArea.Bottom, SafeArea.Left);
+}

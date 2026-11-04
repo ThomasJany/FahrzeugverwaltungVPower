@@ -1,7 +1,9 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
 @inject AuthService Auth
 @inject NavigationManager Navigation
 
+<MudBreakpointProvider OnBreakpointChanged="OnBreakpointChanged" />
 <MudThemeProvider @ref="_themeProvider" @bind-IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
@@ -25,17 +27,27 @@
 
         <AuthorizeView>
             <Authorized>
-                <MudTooltip Text="@RoleText(context.User)">
-                    <MudText Class="mr-4">@context.User.Identity?.Name</MudText>
-                </MudTooltip>
-                <MudButton Variant="Variant.Outlined" Color="Color.Inherit" OnClick="LogoutAsync">Abmelden</MudButton>
+                @if (_isDesktop)
+                {
+                    <MudTooltip Text="@RoleText(context.User)">
+                        <MudText Class="mr-4">@context.User.Identity?.Name</MudText>
+                    </MudTooltip>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Inherit" OnClick="LogoutAsync">Abmelden</MudButton>
+                }
+                else
+                {
+                    <MudTooltip Text="Abmelden">
+                        <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" OnClick="LogoutAsync" />
+                    </MudTooltip>
+                }
             </Authorized>
         </AuthorizeView>
     </MudAppBar>
 
     <AuthorizeView>
         <Authorized>
-            <MudDrawer @bind-Open="_drawerOpen" Variant="DrawerVariant.Persistent" Elevation="1" ClipMode="DrawerClipMode.Always">
+            <MudDrawer @bind-Open="_drawerOpen" Variant="@(_isDesktop ? DrawerVariant.Persistent : DrawerVariant.Temporary)"
+                       Elevation="1" ClipMode="DrawerClipMode.Always">
                 <NavMenu />
             </MudDrawer>
         </Authorized>
@@ -58,6 +70,37 @@
     private MudThemeProvider _themeProvider = null!;
     private bool _drawerOpen = true;
     private bool _isDarkMode;
+    private bool _isDesktop = true;
+    private bool _breakpointKnown;
+
+    protected override void OnInitialized() => Navigation.LocationChanged += OnLocationChanged;
+
+    public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;
+
+    // Ab 960 px Breite steht das Menü dauerhaft neben dem Inhalt. Auf schmalen Bildschirmen (Handy) liegt es als
+    // Schublade über dem Inhalt und ist zunächst geschlossen, sonst bliebe für den Inhalt kaum Platz.
+    private void OnBreakpointChanged(Breakpoint breakpoint)
+    {
+        bool desktop = breakpoint >= Breakpoint.Md;
+
+        if (!_breakpointKnown || desktop != _isDesktop)
+        {
+            _isDesktop = desktop;
+            _drawerOpen = desktop;
+            _breakpointKnown = true;
+            StateHasChanged();
+        }
+    }
+
+    // Nach der Auswahl eines Menüpunkts schließt die Schublade auf schmalen Bildschirmen wieder.
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        if (!_isDesktop && _drawerOpen)
+        {
+            _drawerOpen = false;
+            InvokeAsync(StateHasChanged);
+        }
+    }
 
     // Beim ersten Anzeigen gilt die Einstellung des Betriebssystems bzw. Browsers, danach der Schalter in der Kopfzeile.
     protected override async Task OnAfterRenderAsync(bool firstRender)
