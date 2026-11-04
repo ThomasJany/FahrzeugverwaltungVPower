@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "blazor",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/FahrzeugverwaltungVPower.Blazor", "--no-launch-profile", "-e", "ASPNETCORE_ENVIRONMENT=Development", "--urls", "http://localhost:5155"],
+      "port": 5155
+    },
+    {
+      "name": "api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/FahrzeugverwaltungVPower.API", "--no-launch-profile", "-e", "ASPNETCORE_ENVIRONMENT=Development", "--urls", "http://localhost:5112"],
+      "port": 5112
+    },
+    {
+      "name": "blazor-fake",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/FahrzeugverwaltungVPower.Blazor", "--no-launch-profile", "-e", "ASPNETCORE_ENVIRONMENT=Development", "-e", "Api__BaseUrl=http://localhost:5113/", "--urls", "http://localhost:5155"],
+      "port": 5155
+    },
+    {
+      "name": "fakeapi",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "C:/Users/thoma/AppData/Local/Temp/claude/c9c1cf22b4b9a521/7c51bdd6-7664-43aa-b832-7df36ed9acf8/scratchpad/fakeapi", "--no-launch-profile", "--urls", "http://localhost:5113"],
+      "port": 5113
+    }
+  ]
+}

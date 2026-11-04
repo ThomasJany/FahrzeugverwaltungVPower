@@ -1,0 +1,44 @@
+﻿@inherits LayoutComponentBase
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <AuthorizeView>
+                <Authorized>
+                    <span class="me-3 text-muted" title="@RoleText(context.User)">@context.User.Identity?.Name</span>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="LogoutAsync">Abmelden</button>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="login">Anmelden</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    Ein unerwarteter Fehler ist aufgetreten.
+    <a href="." class="reload">Neu laden</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private static string RoleText(ClaimsPrincipal user) =>
+        string.Join(", ", user.FindAll(ClaimTypes.Role).Select(c => c.Value));
+
+    private async Task LogoutAsync()
+    {
+        await Auth.LogoutAsync();
+        Navigation.NavigateTo("login");
+    }
+}

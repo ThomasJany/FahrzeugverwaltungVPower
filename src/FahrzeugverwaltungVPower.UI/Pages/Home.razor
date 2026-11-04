@@ -1,0 +1,10 @@
+﻿@page "/"
+@attribute [Authorize]
+
+<PageTitle>Fahrzeugverwaltung</PageTitle>
+
+<AuthorizeView>
+    <h1 class="h3 mb-3">Willkommen, @context.User.Identity?.Name</h1>
+</AuthorizeView>
+
+<p class="text-muted">Fahrzeugstammdaten aus der Zulassungsbescheinigung Teil I erfassen und verwalten.</p>

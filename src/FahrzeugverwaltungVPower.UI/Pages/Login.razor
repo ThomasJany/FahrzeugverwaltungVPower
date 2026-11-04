@@ -1,0 +1,87 @@
+@page "/login"
+@attribute [AllowAnonymous]
+@inject AuthService Auth
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Anmelden</PageTitle>
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-5 col-xl-4">
+        <h1 class="h3 mb-3">Anmelden</h1>
+
+        <EditForm Model="_model" OnValidSubmit="SubmitAsync">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label for="email" class="form-label">E-Mail</label>
+                <InputText id="email" type="email" class="form-control" autocomplete="username" @bind-Value="_model.Email" />
+                <ValidationMessage For="() => _model.Email" />
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">Passwort</label>
+                <InputText id="password" type="password" class="form-control" autocomplete="current-password" @bind-Value="_model.Password" />
+                <ValidationMessage For="() => _model.Password" />
+            </div>
+
+            <ErrorList Errors="_errors" />
+
+            <button type="submit" class="btn btn-primary w-100" disabled="@_busy">
+                @(_busy ? "Wird angemeldet ..." : "Anmelden")
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private readonly LoginModel _model = new();
+    private IReadOnlyList<ApiError> _errors = [];
+    private bool _busy;
+
+    /// <summary>Seite, zu der nach der Anmeldung zurückgekehrt wird.</summary>
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState state = await AuthStateProvider.GetAuthenticationStateAsync();
+
+        if (state.User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo("/");
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        _busy = true;
+        _errors = [];
+
+        ApiResult result = await Auth.LoginAsync(_model.Email.Trim(), _model.Password);
+
+        _busy = false;
+
+        if (result.Success)
+        {
+            Navigation.NavigateTo(SafeReturnUrl());
+        }
+        else
+        {
+            _errors = result.Errors;
+        }
+    }
+
+    // Nur Adressen innerhalb dieser Anwendung zulassen, sonst könnte ein Link zu einer fremden Seite weiterleiten.
+    private string SafeReturnUrl() =>
+        ReturnUrl is { Length: > 0 } url && url.StartsWith('/') && !url.StartsWith("//") && !url.StartsWith("/\\") ? url : "/";
+
+    private sealed class LoginModel
+    {
+        [Required(ErrorMessage = "Die E-Mail-Adresse ist erforderlich.")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Das Passwort ist erforderlich.")]
+        public string Password { get; set; } = string.Empty;
+    }
+}

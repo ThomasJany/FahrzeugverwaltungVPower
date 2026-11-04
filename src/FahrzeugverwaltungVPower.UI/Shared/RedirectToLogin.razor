@@ -1,0 +1,15 @@
+@inject NavigationManager Navigation
+
+@code {
+    // Leitet nicht angemeldete Benutzer zur Anmeldeseite um und merkt sich die ursprünglich gewünschte Seite.
+    protected override void OnInitialized()
+    {
+        string relative = Navigation.ToBaseRelativePath(Navigation.Uri);
+
+        string target = relative.StartsWith("login", StringComparison.OrdinalIgnoreCase)
+            ? "login"
+            : $"login?returnUrl={Uri.EscapeDataString("/" + relative)}";
+
+        Navigation.NavigateTo(target, replace: true);
+    }
+}

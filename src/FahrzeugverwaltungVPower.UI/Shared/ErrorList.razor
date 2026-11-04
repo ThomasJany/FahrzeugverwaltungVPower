@@ -1,0 +1,31 @@
+@if (Errors is { Count: > 0 })
+{
+    <div class="alert alert-danger" role="alert">
+        @if (Errors.Count == 1)
+        {
+            <span>@Format(Errors[0])</span>
+        }
+        else
+        {
+            <ul class="mb-0">
+                @foreach (ApiError error in Errors)
+                {
+                    <li>@Format(error)</li>
+                }
+            </ul>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>Die anzuzeigenden Fehler der API.</summary>
+    [Parameter]
+    public IReadOnlyList<ApiError>? Errors { get; set; }
+
+    private static string Format(ApiError error)
+    {
+        string label = FieldLabels.For(error.Field);
+
+        return label.Length == 0 ? error.Message : $"{label}: {error.Message}";
+    }
+}
