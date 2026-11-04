@@ -8,7 +8,11 @@ public static class FieldLabels
     private static readonly Dictionary<string, string> Labels = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Email"] = "E-Mail",
-        ["Password"] = "Passwort"
+        ["FirstName"] = "Vorname",
+        ["LastName"] = "Nachname",
+        ["Password"] = "Passwort",
+        ["NewPassword"] = "Neues Passwort",
+        ["Roles"] = "Rollen"
     };
 
     /// <summary>

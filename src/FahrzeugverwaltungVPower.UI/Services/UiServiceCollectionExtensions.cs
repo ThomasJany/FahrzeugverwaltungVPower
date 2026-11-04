@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MudBlazor;
 using MudBlazor.Services;
 
 namespace FahrzeugverwaltungVPower.UI.Services;
@@ -35,7 +36,11 @@ public static class UiServiceCollectionExtensions
 
         services.TryAddSingleton(TimeProvider.System);
 
-        services.AddMudServices();
+        services.AddMudServices(config =>
+        {
+            // Meldungen (Toasts) erscheinen unten in der Mitte.
+            config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomCenter;
+        });
 
         services.AddAuthorizationCore();
         services.AddCascadingAuthenticationState();
@@ -48,6 +53,7 @@ public static class UiServiceCollectionExtensions
 
         services.AddScoped<ApiClient>();
         services.AddScoped<AuthService>();
+        services.AddScoped<UserService>();
 
         return services;
     }

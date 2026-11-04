@@ -81,6 +81,19 @@ public class CreateUserCommandValidatorTests
         ShouldHaveError(result, nameof(CreateUserCommand.Email), ValidationErrorCodes.EmailAddress);
     }
 
+    [TestMethod]
+    [DataRow("name@host")]
+    [DataRow("name@host.")]
+    [DataRow("name@host.d")]
+    [DataRow("name@.de")]
+    [DataRow("na me@beispiel.de")]
+    public async Task Validate_EmailWithImplausibleDomain_IsInvalid(string email)
+    {
+        ValidationResult result = await ValidateAsync(UserTestData.CreateCommand() with { Email = email });
+
+        ShouldHaveError(result, nameof(CreateUserCommand.Email), ValidationErrorCodes.EmailAddress);
+    }
+
     // ---------- Gemeinsame Regeln: Namen ----------
 
     [TestMethod]

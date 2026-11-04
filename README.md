@@ -10,7 +10,8 @@
 | `src/FahrzeugverwaltungVPower.Core` | Geschäftslogik: Entitäten, Commands und Queries, Handler, Validatoren |
 | `src/FahrzeugverwaltungVPower.Infrastructure` | Datenbankkontext, Migrationen, Identity, Token-Erzeugung, Admin-Seeder |
 | `src/FahrzeugverwaltungVPower.API` | REST-Controller, Anmeldung und Berechtigungen, Swagger |
-| `src/FahrzeugverwaltungVPower.Blazor` | Web-Oberfläche |
+| `src/FahrzeugverwaltungVPower.UI` | Razor-Klassenbibliothek mit allen Seiten, Komponenten und Diensten der Oberfläche (MudBlazor). Sie ist von der Art des Hosts unabhängig und kann später auch in einer MAUI-App laufen |
+| `src/FahrzeugverwaltungVPower.Blazor` | Blazor-Server-Host der Oberfläche: Start, Konfiguration und Speicherort der Anmeldung |
 | `test/FahrzeugverwaltungVPower.Test` | Unit-Tests |
 
 ## Starten
@@ -41,7 +42,31 @@ Wirkung, wenn der Administrator schon in der Datenbank steht.
 
 Der Datenbankname steht im Connection String (`ConnectionStrings:Default` in derselben Datei) und ist projektspezifisch gewählt, damit sich mehrere Projekte auf demselben Rechner nicht dieselbe Datenbank teilen. Wer das Projekt ausführt, kann den Namen dort ändern.
 
+Die Oberfläche läuft in einem zweiten Prozess und ruft die API serverseitig auf. Die Adresse der API steht in
+`src/FahrzeugverwaltungVPower.Blazor/appsettings.json` unter `Api:BaseUrl` (Standard `https://localhost:7139/`).
+Zuerst die API starten, dann in einem zweiten Terminal:
+
+```bash
+dotnet run --project src/FahrzeugverwaltungVPower.Blazor --launch-profile https
+```
+
+Danach ist die Oberfläche unter <https://localhost:7094> erreichbar. Die Anmeldung erfolgt mit den Zugangsdaten
+des Administrators (siehe oben).
+
 Tests: `dotnet test test/FahrzeugverwaltungVPower.Test`
+
+## Oberfläche
+
+- **Anmelden:** E-Mail und Passwort. Das Token liegt im Session-Storage des Browsers und gilt nur für diesen Tab.
+- **Benutzer (nur Admin):** Tabelle mit Sortierung und Suche, Klick auf eine Zeile öffnet die Detailseite zum
+  Bearbeiten. Das Passwort wird zweimal eingegeben. Beim Bearbeiten lässt ein leeres Passwortfeld das bisherige
+  Passwort unverändert. Löschen fragt immer in einem Dialog nach. Die Eingaben werden schon beim Tippen geprüft,
+  mit 0,5 Sekunden Verzögerung nach dem letzten Tastendruck.
+- **Hell/Dunkel:** Umschalter in der Kopfzeile. Zu Beginn gilt die Einstellung des Systems.
+- **TestUser erstellen:** Der Knopf auf der Benutzerseite legt einen Benutzer mit zufälligem Namen, einer
+  zufälligen Rollenkombination (nie Admin) und einer noch nicht vergebenen Adresse `vorname.nachname@example.test`
+  an. Das Passwort aller Testbenutzer steht in der Meldung nach dem Anlegen. **Der Knopf ist nur für
+  Präsentationszwecke gedacht** und gehört in einer echten Anwendung nicht in die Oberfläche.
 
 ## Mit Swagger testen
 

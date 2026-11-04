@@ -1,0 +1,252 @@
+@page "/users/new"
+@page "/users/{Id:guid}"
+@attribute [Authorize(Roles = UiRoles.CanManageUsers)]
+@inject UserService UserApi
+@inject NavigationManager Navigation
+@inject IDialogService Dialogs
+@inject ISnackbar Snackbar
+
+<PageTitle>@Title</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">@Title</MudText>
+
+@if (_loading)
+{
+    <MudText>Wird geladen ...</MudText>
+}
+else if (_notFound)
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-3">Der Benutzer wurde nicht gefunden. Er wurde möglicherweise gelöscht.</MudAlert>
+    <MudLink Href="users">Zurück zur Liste</MudLink>
+}
+else
+{
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudForm @ref="_formRef" Spacing="2">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @ref="_firstNameField" @bind-Value="_form.FirstName" @bind-Value:after="() => _firstNameField.ValidateAsync()"
+                                  Label="Vorname" Variant="Variant.Outlined" Required="true"
+                                  Immediate="true" DebounceInterval="500" Validation="@FirstNameValidator" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @ref="_lastNameField" @bind-Value="_form.LastName" @bind-Value:after="() => _lastNameField.ValidateAsync()"
+                                  Label="Nachname" Variant="Variant.Outlined" Required="true"
+                                  Immediate="true" DebounceInterval="500" Validation="@LastNameValidator" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @ref="_emailField" @bind-Value="_form.Email" @bind-Value:after="() => _emailField.ValidateAsync()"
+                                  Label="E-Mail (Anmeldename)" InputType="InputType.Email"
+                                  Variant="Variant.Outlined" Required="true" autocomplete="off"
+                                  Immediate="true" DebounceInterval="500" Validation="@EmailValidator" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @ref="_passwordField" @bind-Value="_form.Password" @bind-Value:after="OnPasswordChangedAsync"
+                                  Label="@(IsNew ? "Passwort" : "Neues Passwort")" InputType="InputType.Password"
+                                  Variant="Variant.Outlined" Required="@IsNew" autocomplete="new-password"
+                                  Immediate="true" DebounceInterval="500" Validation="@PasswordValidator"
+                                  HelperText="@PasswordHelp" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @ref="_confirmField" @bind-Value="_form.PasswordConfirmation"
+                                  @bind-Value:after="() => _confirmField.ValidateAsync()" Label="Passwort bestätigen"
+                                  InputType="InputType.Password" Variant="Variant.Outlined" autocomplete="new-password"
+                                  Immediate="true" DebounceInterval="500" Validation="@ConfirmationValidator" />
+                </MudItem>
+            </MudGrid>
+
+            <MudText Typo="Typo.subtitle1" Class="mt-4">Rollen</MudText>
+
+            @foreach (string role in UiRoles.All)
+            {
+                <MudCheckBox T="bool" Value="_form.Roles.Contains(role)" ValueChanged="(bool selected) => ToggleRole(role, selected)"
+                             Disabled="_isSelf" Color="Color.Primary" Dense="true">
+                    <b>@role</b>: @UiRoles.Description(role)
+                </MudCheckBox>
+            }
+
+            @if (_isSelf)
+            {
+                <MudText Typo="Typo.caption">Die eigenen Rollen können nicht geändert werden.</MudText>
+            }
+
+            @if (_rolesError is not null)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Error">@_rolesError</MudText>
+            }
+        </MudForm>
+
+        <ErrorList Errors="_errors" />
+
+        <MudStack Row="true" Spacing="2" Class="mt-4" Wrap="Wrap.Wrap">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_busy" OnClick="SaveAsync">
+                @(_busy ? "Wird gespeichert ..." : "Speichern")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Href="users">Abbrechen</MudButton>
+
+            @if (!IsNew && !_isSelf)
+            {
+                <MudSpacer />
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                           Disabled="_busy" OnClick="DeleteAsync">Löschen</MudButton>
+            }
+        </MudStack>
+    </MudPaper>
+}
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    /// <summary>Id des Benutzers, beim Anlegen leer.</summary>
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private MudForm _formRef = null!;
+    private MudTextField<string> _firstNameField = null!;
+    private MudTextField<string> _lastNameField = null!;
+    private MudTextField<string> _emailField = null!;
+    private MudTextField<string> _passwordField = null!;
+    private MudTextField<string> _confirmField = null!;
+    private UserForm _form = new();
+    private IReadOnlyList<ApiError> _errors = [];
+    private string? _rolesError;
+    private string _displayName = string.Empty;
+    private bool _loading = true;
+    private bool _busy;
+    private bool _notFound;
+    private bool _isSelf;
+
+    private bool IsNew => Id is null;
+
+    private string Title => IsNew ? "Neuer Benutzer" : "Benutzer bearbeiten";
+
+    // Der Untertitel unter dem Passwortfeld: Beim Bearbeiten erklärt er, was ein leeres Feld bedeutet.
+    private string PasswordHelp => IsNew
+        ? UserRules.PasswordHint
+        : "Leer lassen, um das Passwort nicht zu ändern. " + UserRules.PasswordHint;
+
+    private Func<string?, string?> FirstNameValidator => v => UserRules.Name(v, "Der Vorname");
+    private Func<string?, string?> LastNameValidator => v => UserRules.Name(v, "Der Nachname");
+    private Func<string?, string?> EmailValidator => UserRules.Email;
+    private Func<string?, string?> PasswordValidator => v => UserRules.Password(v, IsNew);
+    private Func<string?, string?> ConfirmationValidator => v => UserRules.PasswordConfirmation(v, _form.Password);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        _notFound = false;
+        _errors = [];
+        _rolesError = null;
+
+        ClaimsPrincipal user = (await AuthenticationState!).User;
+        Guid? currentUserId = Guid.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out Guid current) ? current : null;
+
+        _isSelf = Id is not null && Id == currentUserId;
+
+        if (Id is Guid id)
+        {
+            ApiResult<UserModel> result = await UserApi.GetAsync(id);
+
+            if (result.Success && result.Value is not null)
+            {
+                _form = UserForm.From(result.Value);
+                _displayName = result.Value.DisplayName;
+            }
+            else if (result.StatusCode == 404)
+            {
+                _notFound = true;
+            }
+            else
+            {
+                _errors = result.Errors;
+            }
+        }
+        else
+        {
+            _form = new UserForm { Roles = [UiRoles.Viewer] };
+        }
+
+        _loading = false;
+    }
+
+    // Die Felder werden nach dem Übernehmen des Wertes erneut geprüft: MudBlazor prüft bei verzögerter Eingabe
+    // sonst noch mit dem vorherigen Wert und zeigt die Meldung einen Schritt zu spät.
+    // Ändert sich das Passwort, muss außerdem die Bestätigung neu geprüft werden.
+    private async Task OnPasswordChangedAsync()
+    {
+        await _passwordField.ValidateAsync();
+
+        if (!string.IsNullOrEmpty(_form.PasswordConfirmation))
+        {
+            await _confirmField.ValidateAsync();
+        }
+    }
+
+    private void ToggleRole(string role, bool selected)
+    {
+        if (selected)
+        {
+            _form.Roles.Add(role);
+        }
+        else
+        {
+            _form.Roles.Remove(role);
+        }
+
+        _rolesError = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        _errors = [];
+
+        await _formRef.ValidateAsync();
+        _rolesError = _form.Roles.Count == 0 ? "Mindestens eine Rolle muss ausgewählt sein." : null;
+
+        if (!_formRef.IsValid || _rolesError is not null)
+        {
+            return;
+        }
+
+        _busy = true;
+
+        ApiResult result = Id is Guid id
+            ? await UserApi.UpdateAsync(id, _form)
+            : await UserApi.CreateAsync(_form);
+
+        _busy = false;
+
+        if (result.Success)
+        {
+            Snackbar.Add(IsNew ? "Der Benutzer wurde angelegt." : "Die Änderungen wurden gespeichert.", Severity.Success);
+            Navigation.NavigateTo("users");
+        }
+        else
+        {
+            _errors = result.Errors;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (Id is not Guid id || !await Dialogs.ConfirmDeleteAsync($"Der Benutzer {_displayName}"))
+        {
+            return;
+        }
+
+        _busy = true;
+        ApiResult result = await UserApi.DeleteAsync(id);
+        _busy = false;
+
+        if (result.Success)
+        {
+            Snackbar.Add($"Der Benutzer {_displayName} wurde gelöscht.", Severity.Success);
+            Navigation.NavigateTo("users");
+        }
+        else
+        {
+            _errors = result.Errors;
+        }
+    }
+}

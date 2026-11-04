@@ -1,0 +1,181 @@
+@page "/users"
+@attribute [Authorize(Roles = UiRoles.CanManageUsers)]
+@inject UserService UserApi
+@inject NavigationManager Navigation
+@inject IDialogService Dialogs
+@inject ISnackbar Snackbar
+
+<PageTitle>Benutzer</PageTitle>
+
+<MudBreakpointProvider OnBreakpointChanged="OnBreakpointChanged" />
+
+<MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2" Class="mb-3">
+    <MudText Typo="Typo.h4">Benutzer</MudText>
+
+    <MudStack Row="true" Spacing="2">
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.PersonAddAlt1" Disabled="_busy"
+                   OnClick="CreateTestUserAsync">TestUser erstellen</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                   Href="users/new">Neuer Benutzer</MudButton>
+    </MudStack>
+</MudStack>
+
+<ErrorList Errors="_errors" />
+
+<MudDataGrid T="UserModel" Items="_users" Loading="_loading" Dense="_dense" Hover="true"
+             SortMode="SortMode.Single" QuickFilter="MatchesSearch" RowClick="OnRowClick"
+             RowStyle="cursor: pointer" Elevation="1">
+    <ToolBarContent>
+        <MudTextField @bind-Value="_search" Placeholder="Suchen in Name, E-Mail und Rollen" Immediate="true"
+                      DebounceInterval="300" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                      Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense" />
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="u => u.DisplayName" Title="Name">
+            <CellTemplate>
+                @context.Item.DisplayName
+                @if (context.Item.Id == _currentUserId)
+                {
+                    <MudText Typo="Typo.caption" Inline="true" Class="ml-1">(du)</MudText>
+                }
+            </CellTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="u => u.Email" Title="E-Mail" />
+        <PropertyColumn Property="u => u.RolesText" Title="Rollen">
+            <CellTemplate>
+                @foreach (string role in context.Item.Roles)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="@RoleColor(role)" Class="mr-1">@role</MudChip>
+                }
+            </CellTemplate>
+        </PropertyColumn>
+        <TemplateColumn Sortable="false" Filterable="false" CellClass="text-right" HeaderClass="text-right" Title="">
+            <CellTemplate>
+                @if (context.Item.Id != _currentUserId)
+                {
+                    <MudTooltip Text="Löschen">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                       Disabled="_busy" OnClick="() => DeleteAsync(context.Item)" />
+                    </MudTooltip>
+                }
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <NoRecordsContent>
+        <MudText Class="pa-4">Keine Benutzer gefunden.</MudText>
+    </NoRecordsContent>
+    <PagerContent>
+        <MudDataGridPager T="UserModel" />
+    </PagerContent>
+</MudDataGrid>
+
+<MudText Typo="Typo.caption" Class="mt-3">
+    Gelöschte Benutzer können sich nicht mehr anmelden. Ein bereits ausgestelltes Token bleibt aber bis zu seinem Ablauf gültig.
+</MudText>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private List<UserModel> _users = [];
+    private IReadOnlyList<ApiError> _errors = [];
+    private Guid? _currentUserId;
+    private string? _search;
+    private bool _loading = true;
+    private bool _busy;
+    private bool _dense;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ClaimsPrincipal user = (await AuthenticationState!).User;
+        _currentUserId = Guid.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out Guid id) ? id : null;
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+
+        ApiResult<List<UserModel>> result = await UserApi.GetAllAsync();
+
+        if (result.Success)
+        {
+            _users = result.Value ?? [];
+            _errors = [];
+        }
+        else
+        {
+            _errors = result.Errors;
+        }
+
+        _loading = false;
+    }
+
+    // Auf schmalen Bildschirmen (unter 960 px) wird die Tabelle dichter dargestellt.
+    private void OnBreakpointChanged(Breakpoint breakpoint)
+    {
+        _dense = breakpoint < Breakpoint.Md;
+        StateHasChanged();
+    }
+
+    private bool MatchesSearch(UserModel user) =>
+        string.IsNullOrWhiteSpace(_search)
+        || user.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || user.Email.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || user.RolesText.Contains(_search, StringComparison.OrdinalIgnoreCase);
+
+    private void OnRowClick(DataGridRowClickEventArgs<UserModel> args) =>
+        Navigation.NavigateTo($"users/{args.Item.Id}");
+
+    private static Color RoleColor(string role) => role switch
+    {
+        UiRoles.Admin => Color.Error,
+        UiRoles.Creator => Color.Primary,
+        UiRoles.Editor => Color.Info,
+        _ => Color.Default
+    };
+
+    private async Task DeleteAsync(UserModel user)
+    {
+        if (!await Dialogs.ConfirmDeleteAsync($"Der Benutzer {user.DisplayName}"))
+        {
+            return;
+        }
+
+        _busy = true;
+        ApiResult result = await UserApi.DeleteAsync(user.Id);
+        _busy = false;
+
+        if (result.Success)
+        {
+            _users.Remove(user);
+            _errors = [];
+            Snackbar.Add($"Der Benutzer {user.DisplayName} wurde gelöscht.", Severity.Success);
+        }
+        else
+        {
+            _errors = result.Errors;
+        }
+    }
+
+    // Nur für Vorführungen: legt einen Benutzer mit zufälligem Namen und zufälligen Rollen an (siehe README).
+    private async Task CreateTestUserAsync()
+    {
+        _busy = true;
+
+        UserForm form = TestUserGenerator.Create(_users.Select(u => u.Email));
+        ApiResult result = await UserApi.CreateAsync(form);
+
+        _busy = false;
+
+        if (!result.Success)
+        {
+            _errors = result.Errors;
+            return;
+        }
+
+        await LoadAsync();
+        Snackbar.Add($"Testbenutzer {form.Email} angelegt, Passwort: {TestUserGenerator.Password}", Severity.Success);
+    }
+}
