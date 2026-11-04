@@ -46,17 +46,16 @@ public class VehicleController(IMediator mediator) : ApiControllerBase(mediator)
     }
 
     /// <summary>
-    /// Aktualisiert ein Fahrzeug.
+    /// Ändert das Fahrzeug mit der angegebenen Id.
     /// </summary>
-    /// <param name="vehicle">Das zu aktualisierende Fahrzeug.</param>
-    [HttpPut]
-    public IActionResult UpdateVehicle([FromBody] Vehicle vehicle)
+    /// <param name="id">Id des zu ändernden Fahrzeugs.</param>
+    /// <param name="command">Die neuen Daten des Fahrzeugs.</param>
+    /// <param name="cancellationToken">Token zum Abbrechen des Vorgangs.</param>
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateVehicle(Guid id, [FromBody] UpdateVehicleCommand command, CancellationToken cancellationToken)
     {
-        // Mediator.Send(new UpdateVehicleCommand(vehicle));
-
-        // Commands, Mediator und Validator
-
-        return Ok(vehicle);
+        bool updated = await Mediator.Send(command with { Id = id }, cancellationToken);
+        return updated ? NoContent() : NotFound();
     }
 
     /// <summary>

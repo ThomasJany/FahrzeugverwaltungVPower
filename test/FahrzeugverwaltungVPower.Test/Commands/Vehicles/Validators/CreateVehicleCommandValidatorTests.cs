@@ -10,13 +10,6 @@ namespace FahrzeugverwaltungVPower.Test.Commands.Vehicles.Validators;
 [TestClass]
 public class CreateVehicleCommandValidatorTests
 {
-    // Fehlercodes der FluentValidation-Regeln.
-    private const string NotEmptyCode = "NotEmptyValidator";
-    private const string RegexCode = "RegularExpressionValidator";
-    private const string MaxLengthCode = "MaximumLengthValidator";
-    private const string PredicateCode = "PredicateValidator";
-    private const string AsyncPredicateCode = "AsyncPredicateValidator";
-
     // ---------- Positivfall ----------
 
     [TestMethod]
@@ -35,7 +28,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { LicensePlate = "" });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.LicensePlate), NotEmptyCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.LicensePlate), ValidationErrorCodes.NotEmpty);
     }
 
     [TestMethod]
@@ -43,7 +36,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { LicensePlate = "AB#123" });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.LicensePlate), RegexCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.LicensePlate), ValidationErrorCodes.RegularExpression);
     }
 
     // ---------- Erstzulassung (Feld B) ----------
@@ -55,7 +48,7 @@ public class CreateVehicleCommandValidatorTests
 
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { FirstRegistrationDate = tomorrow });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.FirstRegistrationDate), PredicateCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.FirstRegistrationDate), ValidationErrorCodes.Predicate);
     }
 
     // ---------- Halter (Feld C.1.1, C.1.2) ----------
@@ -65,7 +58,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { Holder = "" });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.Holder), NotEmptyCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.Holder), ValidationErrorCodes.NotEmpty);
     }
 
     [TestMethod]
@@ -73,7 +66,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { Holder = new string('A', 201) });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.Holder), MaxLengthCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.Holder), ValidationErrorCodes.MaxLength);
     }
 
     [TestMethod]
@@ -81,7 +74,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { HolderFirstName = new string('A', 201) });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.HolderFirstName), MaxLengthCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.HolderFirstName), ValidationErrorCodes.MaxLength);
     }
 
     // ---------- Hersteller (Feld D.1) ----------
@@ -91,7 +84,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { Manufacturer = "" });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.Manufacturer), NotEmptyCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.Manufacturer), ValidationErrorCodes.NotEmpty);
     }
 
     [TestMethod]
@@ -99,7 +92,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { Manufacturer = new string('A', 26) });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.Manufacturer), MaxLengthCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.Manufacturer), ValidationErrorCodes.MaxLength);
     }
 
     // ---------- Typ (Feld D.2) ----------
@@ -109,7 +102,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { TypeDesignation = "" });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.TypeDesignation), NotEmptyCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.TypeDesignation), ValidationErrorCodes.NotEmpty);
     }
 
     [TestMethod]
@@ -117,7 +110,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { TypeDesignation = new string('A', 26) });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.TypeDesignation), MaxLengthCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.TypeDesignation), ValidationErrorCodes.MaxLength);
     }
 
     // ---------- Handelsbezeichnung (Feld D.3) ----------
@@ -127,7 +120,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { Model = "" });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.Model), NotEmptyCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.Model), ValidationErrorCodes.NotEmpty);
     }
 
     [TestMethod]
@@ -135,7 +128,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { Model = new string('A', 26) });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.Model), MaxLengthCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.Model), ValidationErrorCodes.MaxLength);
     }
 
     // ---------- VIN (Feld E) ----------
@@ -145,7 +138,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { VIN = "" });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.VIN), NotEmptyCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.VIN), ValidationErrorCodes.NotEmpty);
     }
 
     [TestMethod]
@@ -154,7 +147,7 @@ public class CreateVehicleCommandValidatorTests
         // 17 Zeichen, aber mit dem Buchstaben "O", der in einer VIN nicht vorkommt.
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { VIN = "TMBZZZ1KZAW12345O" });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.VIN), RegexCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.VIN), ValidationErrorCodes.RegularExpression);
     }
 
     [TestMethod]
@@ -165,7 +158,7 @@ public class CreateVehicleCommandValidatorTests
             VehicleTestData.CreateCommand() with { VIN = VehicleTestData.Vin.ToLowerInvariant() },
             VehicleTestData.CreateVehicle(VehicleTestData.Vin));
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.VIN), AsyncPredicateCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.VIN), ValidationErrorCodes.AsyncPredicate);
     }
 
     // ---------- HSN (Feld 2.1) ----------
@@ -175,7 +168,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { HSN = "" });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.HSN), NotEmptyCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.HSN), ValidationErrorCodes.NotEmpty);
     }
 
     [TestMethod]
@@ -183,7 +176,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { HSN = "12AB" });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.HSN), RegexCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.HSN), ValidationErrorCodes.RegularExpression);
     }
 
     // ---------- TSN (Feld 2.2) ----------
@@ -193,7 +186,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { TSN = "" });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.TSN), NotEmptyCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.TSN), ValidationErrorCodes.NotEmpty);
     }
 
     [TestMethod]
@@ -201,7 +194,7 @@ public class CreateVehicleCommandValidatorTests
     {
         ValidationResult result = await ValidateAsync(VehicleTestData.CreateCommand() with { TSN = "ABCDEFGHIJ" });
 
-        ShouldHaveError(result, nameof(CreateVehicleCommand.TSN), RegexCode);
+        ShouldHaveError(result, nameof(CreateVehicleCommand.TSN), ValidationErrorCodes.RegularExpression);
     }
 
     // ---------- Hilfsmethoden ----------

@@ -55,4 +55,23 @@ internal static class VehicleTestData
         CreatedAt = DateTimeOffset.UtcNow,
         ModifiedAt = DateTimeOffset.UtcNow
     };
+
+    /// <summary>
+    /// Ein Änderungsbefehl, der alle Validierungsregeln erfüllt. Alle Felder außer der VIN weichen von <see cref="CreateVehicle"/> ab.
+    /// </summary>
+    public static UpdateVehicleCommand UpdateCommand(Guid id) => new()
+    {
+        Id = id,
+        LicensePlate = "OHZ CD 45",
+        FirstRegistrationDate = new DateOnly(2021, 3, 2),
+        Holder = "Musterfrau",
+        HolderFirstName = "Erika",
+        Manufacturer = "Volkswagen",
+        TypeDesignation = "3G",
+        Model = "Passat",
+        VIN = Vin,
+        InspectionValidUntil = new DateOnly(2028, 3, 31),
+        HSN = "0603",
+        TSN = "BHV000100"
+    };
 }
