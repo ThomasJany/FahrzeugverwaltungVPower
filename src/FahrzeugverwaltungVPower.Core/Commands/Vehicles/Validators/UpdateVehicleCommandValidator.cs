@@ -1,48 +1,39 @@
-﻿using FahrzeugverwaltungVPower.Core.Commands;
-using FahrzeugverwaltungVPower.Core.Commands.Vehicles;
+﻿using FahrzeugverwaltungVPower.Core.Abstractions;
 using FluentValidation;
-using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace FahrzeugverwaltungVPower.Core.Commands.Vehicles.Validators;
 
-public class UpdateVehicleCommandValidator : CommandValidatorBase<UpdateVehicleCommand>
+/// <summary>
+/// Prüft die Eingaben zum Ändern eines Fahrzeugs (gemeinsame Regeln aus der Basisklasse, VIN eines anderen Fahrzeugs).
+/// </summary>
+public class UpdateVehicleCommandValidator : VehicleCommandValidatorBase<UpdateVehicleCommand>
 {
-    public UpdateVehicleCommandValidator(IMediator mediator) : base(mediator)
+    private readonly IApplicationDbContext _context;
+
+    /// <summary>
+    /// Ergänzt die gemeinsamen Regeln um die Prüfung auf die VIN eines anderen Fahrzeugs.
+    /// </summary>
+    /// <param name="context">Datenbankkontext zur Prüfung auf doppelte VIN.</param>
+    public UpdateVehicleCommandValidator(IApplicationDbContext context)
     {
-        RuleFor(c => c.Vehicle.Holder)
-            .NotEmpty()
-            .WithMessage("Vehicle holder is required.");
+        _context = context;
 
-        RuleFor(c => c.Vehicle.Model)
-            .NotEmpty()
-            .WithMessage("Vehicle model is required.");
+        RuleFor(x => x.VIN)
+            .MustAsync((command, vin, cancellationToken) => IsVinUniqueAsync(command.Id, vin, cancellationToken))
+            .WithMessage("Ein anderes Fahrzeug mit dieser VIN existiert bereits.");
+    }
 
-        RuleFor(c => c.Vehicle.VIN)
-            .NotEmpty()
-            .WithMessage("Vehicle VIN is required.");
+    /// <summary>
+    /// Prüft, ob kein anderes Fahrzeug als das mit der angegebenen Id die (normalisierte) VIN trägt.
+    /// </summary>
+    /// <param name="id">Id des zu ändernden Fahrzeugs.</param>
+    /// <param name="vin">Die zu prüfende VIN.</param>
+    /// <param name="cancellationToken">Token zum Abbrechen des Vorgangs.</param>
+    private async Task<bool> IsVinUniqueAsync(Guid id, string vin, CancellationToken cancellationToken)
+    {
+        string normalized = vin.Trim().ToUpperInvariant();
 
-        RuleFor(c => c.Vehicle.LicensePlate)
-            .NotEmpty()
-            .WithMessage("Vehicle license plate is required.");
-
-        RuleFor(c => c.Vehicle.FirstRegistrationDate)
-            .NotNull()
-            .WithMessage("Vehicle first registration date is required.");
-
-        RuleFor(c => c.Vehicle.InspectionValidUntil)
-            .NotNull()
-            .WithMessage("Vehicle inspection valid until date is required.");
-
-        RuleFor(c => c.Vehicle.Manufacturer)
-            .NotEmpty()
-            .WithMessage("Vehicle manufacturer is required.");
-
-        RuleFor(c => c.Vehicle.HSN)
-            .NotEmpty()
-            .WithMessage("Vehicle HSN is required.");
-
-        RuleFor(c => c.Vehicle.TSN)
-            .NotEmpty()
-            .WithMessage("Vehicle TSN is required.");
+        return !await _context.Vehicles.AnyAsync(v => v.VIN == normalized && v.Id != id, cancellationToken);
     }
 }

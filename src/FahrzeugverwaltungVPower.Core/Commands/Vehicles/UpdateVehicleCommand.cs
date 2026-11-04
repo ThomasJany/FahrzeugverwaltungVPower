@@ -1,9 +1,12 @@
-﻿using FahrzeugverwaltungVPower.Core.Entities;
-using MediatR;
+﻿using MediatR;
 
 namespace FahrzeugverwaltungVPower.Core.Commands.Vehicles;
 
-public record UpdateVehicleCommand : IRequest
+/// <summary>
+/// Befehl zum Ändern eines Fahrzeugs. Das Ergebnis ist <see langword="false"/>, wenn es das Fahrzeug nicht gibt.
+/// </summary>
+public record UpdateVehicleCommand : VehicleCommandBase, IRequest<bool>
 {
-    public Vehicle Vehicle { get; init; } = default!;
+    /// <summary>Id des zu ändernden Fahrzeugs.</summary>
+    public Guid Id { get; init; }
 }

@@ -1,14 +1,26 @@
-﻿using FahrzeugverwaltungVPower.Core.Entities;
-using FahrzeugverwaltungVPower.Core.Queries;
-using FahrzeugverwaltungVPower.Core.Queries.Vehicles;
+﻿using FahrzeugverwaltungVPower.Core.Abstractions;
+using FahrzeugverwaltungVPower.Core.Entities;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace FahrzeugverwaltungVPower.Core.Queries.Vehicles.Handlers;
 
-public class GetVehicleQueryHandler(IMediator mediator) : QueryHandlerBase<GetVehicleQuery, Vehicle>(mediator)
+/// <summary>
+/// Liefert ein Fahrzeug anhand der VIN.
+/// </summary>
+/// <param name="context">Datenbankkontext zum Lesen.</param>
+public class GetVehicleQueryHandler(IApplicationDbContext context) : IRequestHandler<GetVehicleQuery, Vehicle?>
 {
-    public override Task<Vehicle> Handle(GetVehicleQuery request, CancellationToken cancellationToken)
+    /// <summary>
+    /// Normalisiert die VIN und sucht das Fahrzeug, <see langword="null"/> wenn es keines gibt.
+    /// </summary>
+    /// <param name="request">Die Abfrage mit der VIN.</param>
+    /// <param name="cancellationToken">Token zum Abbrechen des Vorgangs.</param>
+    public async Task<Vehicle?> Handle(GetVehicleQuery request, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        string vin = request.Vin.Trim().ToUpperInvariant();
+
+        return await context.Vehicles.AsNoTracking()
+                                     .FirstOrDefaultAsync(v => v.VIN == vin, cancellationToken);
     }
 }

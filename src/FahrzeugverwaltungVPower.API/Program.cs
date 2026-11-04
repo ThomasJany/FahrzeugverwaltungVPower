@@ -9,7 +9,12 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddOpenApi();
 
+builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 using (IServiceScope scope = app.Services.CreateScope())
 {

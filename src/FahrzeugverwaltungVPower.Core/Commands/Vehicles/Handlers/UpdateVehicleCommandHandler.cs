@@ -1,12 +1,11 @@
-﻿using FahrzeugverwaltungVPower.Core.Commands;
-using FahrzeugverwaltungVPower.Core.Commands.Vehicles;
+﻿using FahrzeugverwaltungVPower.Core.Abstractions;
 using MediatR;
 
 namespace FahrzeugverwaltungVPower.Core.Commands.Vehicles.Handlers;
 
-public class UpdateVehicleCommandHandler(IMediator mediator) : CommandHandlerBase<UpdateVehicleCommand>(mediator)
+public class UpdateVehicleCommandHandler(IApplicationDbContext context) : IRequestHandler<UpdateVehicleCommand, bool>
 {
-    public override Task Handle(UpdateVehicleCommand request, CancellationToken cancellationToken)
+    public Task<bool> Handle(UpdateVehicleCommand request, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }

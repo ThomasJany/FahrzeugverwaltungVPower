@@ -3,6 +3,7 @@ using MediatR;
 
 namespace FahrzeugverwaltungVPower.Core.Queries.Vehicles;
 
-public class GetAllVehiclesQuery : IRequest<ICollection<Vehicle>>
-{
-}
+/// <summary>
+/// Abfrage aller Fahrzeuge.
+/// </summary>
+public class GetAllVehiclesQuery : IRequest<ICollection<Vehicle>>;

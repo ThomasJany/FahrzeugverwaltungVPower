@@ -1,4 +1,5 @@
-﻿using FahrzeugverwaltungVPower.Core.Entities;
+﻿using FahrzeugverwaltungVPower.Core.Abstractions;
+using FahrzeugverwaltungVPower.Core.Entities;
 using FahrzeugverwaltungVPower.Core.Security;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -10,7 +11,9 @@ namespace FahrzeugverwaltungVPower.Infrastructure.Data;
 /// Der Datenbankkontext für die Fahrzeugverwaltung.
 /// </summary>
 /// <param name="options"></param>
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options)
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : 
+    IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options), 
+    IApplicationDbContext
 {
     /// <summary>
     /// Speichert die Fahrzeuge.

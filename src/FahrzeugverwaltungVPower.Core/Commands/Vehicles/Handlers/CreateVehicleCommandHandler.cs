@@ -1,13 +1,44 @@
-﻿using FahrzeugverwaltungVPower.Core.Commands;
-using FahrzeugverwaltungVPower.Core.Commands.Vehicles;
+﻿using FahrzeugverwaltungVPower.Core.Abstractions;
+using FahrzeugverwaltungVPower.Core.Entities;
 using MediatR;
 
 namespace FahrzeugverwaltungVPower.Core.Commands.Vehicles.Handlers;
 
-public class CreateVehicleCommandHandler(IMediator mediator) : CommandHandlerBase<CreateVehicleCommand>(mediator)
+/// <summary>
+/// Legt ein Fahrzeug an und gibt dessen Id zurück.
+/// </summary>
+/// <param name="context">Datenbankkontext zum Speichern.</param>
+public class CreateVehicleCommandHandler(IApplicationDbContext context) : IRequestHandler<CreateVehicleCommand, Guid>
 {
-    public override Task Handle(CreateVehicleCommand request, CancellationToken cancellationToken)
+    /// <summary>
+    /// Normalisiert die Eingaben, speichert das Fahrzeug und gibt die Id zurück.
+    /// </summary>
+    /// <param name="command">Die Daten des neuen Fahrzeugs.</param>
+    /// <param name="cancellationToken">Token zum Abbrechen des Vorgangs.</param>
+    public async Task<Guid> Handle(CreateVehicleCommand command, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+
+        Vehicle vehicle = new()
+        {
+            LicensePlate = command.LicensePlate.Trim().ToUpperInvariant(),
+            FirstRegistrationDate = command.FirstRegistrationDate,
+            Holder = command.Holder.Trim(),
+            HolderFirstName = command.HolderFirstName?.Trim(),
+            Manufacturer = command.Manufacturer.Trim(),
+            TypeDesignation = command.TypeDesignation.Trim(),
+            Model = command.Model.Trim(),
+            VIN = command.VIN.Trim().ToUpperInvariant(),
+            InspectionValidUntil = command.InspectionValidUntil,
+            HSN = command.HSN.Trim(),
+            TSN = command.TSN.Trim().ToUpperInvariant(),
+            CreatedAt = now,
+            ModifiedAt = now
+        };
+
+        context.Vehicles.Add(vehicle);
+        await context.SaveChangesAsync(cancellationToken);
+
+        return vehicle.Id;
     }
 }

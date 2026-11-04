@@ -1,9 +1,8 @@
-﻿using FahrzeugverwaltungVPower.Core.Entities;
-using MediatR;
+﻿using MediatR;
 
 namespace FahrzeugverwaltungVPower.Core.Commands.Vehicles;
 
-public record CreateVehicleCommand : IRequest
-{
-    Vehicle Vehicle { get; init; } = default!;
-}
+/// <summary>
+/// Befehl zum Anlegen eines Fahrzeugs. Das Ergebnis ist die Id des neuen Fahrzeugs.
+/// </summary>
+public record CreateVehicleCommand : VehicleCommandBase, IRequest<Guid>;

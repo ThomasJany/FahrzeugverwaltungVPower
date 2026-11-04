@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="../test/FahrzeugverwaltungVPower.Test/FahrzeugverwaltungVPower.Test.csproj" Id="8b55c316-5818-4565-9dea-098cc0aee622" />
   <Project Path="FahrzeugverwaltungVPower.API/FahrzeugverwaltungVPower.API.csproj" />
   <Project Path="FahrzeugverwaltungVPower.Blazor/FahrzeugverwaltungVPower.Blazor.csproj" />
   <Project Path="FahrzeugverwaltungVPower.Core/FahrzeugverwaltungVPower.Core.csproj" />
