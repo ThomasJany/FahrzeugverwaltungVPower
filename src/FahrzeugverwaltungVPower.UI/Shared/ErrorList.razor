@@ -1,20 +1,20 @@
 @if (Errors is { Count: > 0 })
 {
-    <div class="alert alert-danger" role="alert">
+    <MudAlert Severity="Severity.Error" Class="my-3">
         @if (Errors.Count == 1)
         {
             <span>@Format(Errors[0])</span>
         }
         else
         {
-            <ul class="mb-0">
+            <ul class="my-0">
                 @foreach (ApiError error in Errors)
                 {
                     <li>@Format(error)</li>
                 }
             </ul>
         }
-    </div>
+    </MudAlert>
 }
 
 @code {

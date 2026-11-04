@@ -20,6 +20,12 @@
       "port": 5155
     },
     {
+      "name": "blazor-out",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["C:/Users/thoma/AppData/Local/Temp/claude/c9c1cf22b4b9a521/7c51bdd6-7664-43aa-b832-7df36ed9acf8/scratchpad/blazorout/FahrzeugverwaltungVPower.Blazor.dll", "--environment", "Development", "--contentRoot", "F:/_projects/FahrzeugverwaltungVPower/src/FahrzeugverwaltungVPower.Blazor", "--Api:BaseUrl", "http://localhost:5113/", "--urls", "http://localhost:5170"],
+      "port": 5170
+    },
+    {
       "name": "fakeapi",
       "runtimeExecutable": "dotnet",
       "runtimeArgs": ["run", "--project", "C:/Users/thoma/AppData/Local/Temp/claude/c9c1cf22b4b9a521/7c51bdd6-7664-43aa-b832-7df36ed9acf8/scratchpad/fakeapi", "--no-launch-profile", "--urls", "http://localhost:5113"],

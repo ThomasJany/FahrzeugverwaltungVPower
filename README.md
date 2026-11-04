@@ -83,7 +83,7 @@ Bibliotheken von Microsoft (.NET, ASP.NET Core, Entity Framework Core, MSTest u.
 | FluentValidation 12.2.0 | Validierung der Eingaben | Apache-2.0 |
 | Swashbuckle.AspNetCore 10.3.1 | Swagger-Dokumentation und -Oberfläche | MIT |
 | Swagger UI (JavaScript, in Swashbuckle enthalten) | Oberfläche zum Testen der API | Apache-2.0 |
-| Bootstrap 5.3.3 (CSS und JavaScript, Blazor-Vorlage) | Layout der Oberfläche | MIT |
+| MudBlazor 9.12.0 | Komponenten und Layout der Oberfläche | MIT |
 | NSubstitute 6.2.0 (nur Tests) | Mocks | BSD-3-Clause |
 | Shouldly 4.3.0 (nur Tests) | Prüfungen in Tests | BSD-3-Clause |
 
@@ -98,6 +98,7 @@ Die rechte Spalte nennt die Stelle im Code.
 | Entscheidung | Wo im Code |
 |---|---|
 | MediatR trotz geänderter Lizenz (Community-Lizenz, Lernprojekt) | `API/ServiceCollectionExtensions.cs` |
+| MudBlazor statt Bootstrap: fertige Tabelle mit Sortierung, Dialoge und Eingabefelder mit Validierung, MIT-Lizenz. Schrift: Systemschrift statt Google Fonts (keine Verbindung zu Drittservern) | `UI/Layout/MainLayout.razor`, `UI/Services/UiServiceCollectionExtensions.cs` |
 | Zugangsdaten des Administrators und JWT-Schlüssel in `appsettings.json` statt in Secrets (Projekt soll ohne Einrichtung laufen). In echten Anwendungen gehören sie in User-Secrets, Umgebungsvariablen oder einen Secret-Store | `Infrastructure/Data/AdminSeeder.cs`, `Core/Security/JwtOptions.cs` |
 | Migrationen werden bei jedem Start angewendet (in Produktion stattdessen Migration Bundle oder SQL-Skript in der Pipeline) | `API/Program.cs` |
 | Selbst ausgestellte JWT ohne Refresh-Token: ausgestellte Tokens lassen sich nicht widerrufen, nach Löschen oder Rollenwechsel eines Benutzers gelten sie bis zum Ablauf | `Infrastructure/Security/JwtTokenService.cs` |

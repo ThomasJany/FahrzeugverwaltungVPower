@@ -4,8 +4,8 @@
             <NotAuthorized>
                 @if (context.User.Identity?.IsAuthenticated == true)
                 {
-                    <h1 class="h3">Kein Zugriff</h1>
-                    <p>Für diesen Bereich fehlt die Berechtigung.</p>
+                    <MudText Typo="Typo.h4" GutterBottom="true">Kein Zugriff</MudText>
+                    <MudText>Für diesen Bereich fehlt die Berechtigung.</MudText>
                 }
                 else
                 {
@@ -13,7 +13,7 @@
                 }
             </NotAuthorized>
             <Authorizing>
-                <p class="text-muted">Anmeldung wird geprüft ...</p>
+                <MudText>Anmeldung wird geprüft ...</MudText>
             </Authorizing>
         </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MudBlazor.Services;
 
 namespace FahrzeugverwaltungVPower.UI.Services;
 
@@ -33,6 +34,8 @@ public static class UiServiceCollectionExtensions
         configure(options);
 
         services.TryAddSingleton(TimeProvider.System);
+
+        services.AddMudServices();
 
         services.AddAuthorizationCore();
         services.AddCascadingAuthenticationState();

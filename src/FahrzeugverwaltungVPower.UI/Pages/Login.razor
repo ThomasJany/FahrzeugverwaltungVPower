@@ -6,33 +6,32 @@
 
 <PageTitle>Anmelden</PageTitle>
 
-<div class="row justify-content-center">
-    <div class="col-12 col-md-8 col-lg-5 col-xl-4">
-        <h1 class="h3 mb-3">Anmelden</h1>
+<MudGrid Justify="Justify.Center">
+    <MudItem xs="12" sm="8" md="5" lg="4">
+        <MudPaper Class="pa-6">
+            <MudText Typo="Typo.h5" GutterBottom="true">Anmelden</MudText>
 
-        <EditForm Model="_model" OnValidSubmit="SubmitAsync">
-            <DataAnnotationsValidator />
+            <EditForm Model="_model" OnValidSubmit="SubmitAsync">
+                <DataAnnotationsValidator />
 
-            <div class="mb-3">
-                <label for="email" class="form-label">E-Mail</label>
-                <InputText id="email" type="email" class="form-control" autocomplete="username" @bind-Value="_model.Email" />
-                <ValidationMessage For="() => _model.Email" />
-            </div>
+                <MudTextField @bind-Value="_model.Email" For="() => _model.Email" Label="E-Mail"
+                              InputType="InputType.Email" Variant="Variant.Outlined" Margin="Margin.Dense"
+                              autocomplete="username" Class="mb-3" />
 
-            <div class="mb-3">
-                <label for="password" class="form-label">Passwort</label>
-                <InputText id="password" type="password" class="form-control" autocomplete="current-password" @bind-Value="_model.Password" />
-                <ValidationMessage For="() => _model.Password" />
-            </div>
+                <MudTextField @bind-Value="_model.Password" For="() => _model.Password" Label="Passwort"
+                              InputType="InputType.Password" Variant="Variant.Outlined" Margin="Margin.Dense"
+                              autocomplete="current-password" />
 
-            <ErrorList Errors="_errors" />
+                <ErrorList Errors="_errors" />
 
-            <button type="submit" class="btn btn-primary w-100" disabled="@_busy">
-                @(_busy ? "Wird angemeldet ..." : "Anmelden")
-            </button>
-        </EditForm>
-    </div>
-</div>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary"
+                           FullWidth="true" Disabled="_busy" Class="mt-3">
+                    @(_busy ? "Wird angemeldet ..." : "Anmelden")
+                </MudButton>
+            </EditForm>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 
 @code {
     private readonly LoginModel _model = new();
